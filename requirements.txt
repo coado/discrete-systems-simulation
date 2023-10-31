@@ -1,0 +1,5 @@
+numpy
+matplotlib
+cellpylib
+jupyter
+ipympl

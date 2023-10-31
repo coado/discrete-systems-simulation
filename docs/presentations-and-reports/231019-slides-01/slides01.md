@@ -78,9 +78,14 @@ Rondo Grunwaldzkie w Krakowie z najbliższymi dochodzącymi ulicami
 
 ## Paweł Gora *Adaptacyjne planowanie ruchu drogowego*
 
+[@Gora2010]
+
 W pracy przedstawione zostały metody adaptacyjnego planowania ruchu drogowego oparte na algorytmie genetycznym. Ich skuteczność przetestowana została przy użyciu **symulatora ruchu drogowego TSF** (Traffic Simulation Framework). Opisana została również architektura samego symulatora oraz techniczne aspekty jego implementacji przy u˙zyciu technologii .NET Framework
 
+
 ## Amir Rasouli *Pedestrian Simulation: A Review*
+
+[@RasouliND]
 
 Artykuł ten skupia się na różnych aspektach modelu ruchu pieszego (tłumu) –
 i symulacji. Przegląd obejmuje: różne kryteria modelowania, m.in jak szczegółowość, techniki i czynniki zaangażowane w modelowanie zachowań pieszych zachowanie i różne metody symulacji pieszych z bardziej szczegółowymi wynikami przyjrzyjmy się dwóm sposobom symulowania zachowań pieszych w scenach ruchu drogowego. Na koniec przedstawiono zalety i wady różnych technik symulacyjnych omówiono i sformułowano zalecenia dotyczące przyszłych badań.
@@ -111,3 +116,5 @@ i symulacji. Przegląd obejmuje: różne kryteria modelowania, m.in jak szczegó
 +---------------------------------------+-----------+-----------+-----------+
 
 # Dziękujemy za uwagę
+
+# Bibliografia
