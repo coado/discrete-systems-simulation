@@ -1,0 +1,24 @@
+# Bibliografia 
+
+- styl dla nauk technicznych: authornumer
+	odwoływanie się po numerze
+- arxiv jest ok, normalnie publikują
+- cytacja przez google scholar -> bibtech
+- ujednolicona bibliografia
+
+\cite
+
+# Rysunki
+
+źródła pod rysunkami
+
+Figure 2 -> Rysunek 2 (jeżeli zybt długo zajmie to nie szukać)
+
+Powoływanie się na rysunki w tekście, 
+żeby rysunki nie były "tak sobie"
+
+Rysunki z podrysunkami powinny mieć odnośniki A, B, C, a ich opisy powinny być 
+w opisie głównego rysunku
+
+
+

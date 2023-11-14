@@ -11,13 +11,13 @@ author: |
     Mateusz Mazur
 header-includes:
     - \usepackage{url}
+    - \usepackage[polish]{babel} # sudo apt install texlive-lang-polish
+link-citations: true
 ---
 
 # Główne źródła
 
-## Paweł Gora *Adaptacyjne planowanie ruchu drogowego*
-
-[@Gora2010]
+## Gora P. *Adaptacyjne planowanie ruchu drogowego* [@gora2010adaptacyjne]
 
 ### Abstrakt
 
@@ -29,10 +29,9 @@ W pracy przedstawione zostały metody adaptacyjnego planowania ruchu drogowego o
 
 **Forma symulacji:** Podejście agent-based. Każda jednostka będzie rozróżniana, każdy kierowca będzie rozróżnialny.
 
-![Automat komórkowy w modelu Nagela-Schreckenberga](img/Gora2010.png)
+![Przedstawienie ruchu samochodów po drodze (komórkach taśmy) wg. modelu Nagela-Schreckenberga autorstwa [@gora2010adaptacyjne] \label{imgGora1}.](img/Gora2010.png)
 
-Odcinki dróg mogą mieć kilka pasów ruchu. Każdy z pasów ruchu jest reprezentowany jako skończona taśma podzielona na komórki, które będą wchodziły w skład automatu komórkowego. W każdej chwili ewolucji modelu pojedyncza komórka może być pusta lub zajeta przez
-1 pojazd. Ewolucja odbywa się w dyskretnym czasie zgodnie z ustalonymi regułami ruchu.
+Odcinki dróg mogą mieć kilka pasów ruchu. Każdy z pasów ruchu jest reprezentowany jako skończona taśma podzielona na komórki, które będą wchodziły w skład automatu komórkowego. W każdej chwili ewolucji modelu pojedyncza komórka może być pusta lub zajeta przez 1 pojazd. Ewolucja odbywa się w dyskretnym czasie zgodnie z ustalonymi regułami ruchu. Przykład ruchu pojazdów po drodze w modelu obrazuje rysunek \ref{imgGora1}. 
 
 ### Wykorzystanie - Model infrastruktury drogowej
 
@@ -42,9 +41,7 @@ Odcinki dróg mogą mieć kilka pasów ruchu. Każdy z pasów ruchu jest repreze
 - wielopasmowość dróg
 - przejścia dla pieszych
 
-## Amir Rasouli *Pedestrian Simulation: A Review*
-
-[@RasouliND]
+## Rasouli A. *Pedestrian Simulation: A Review* [@rasouli2021pedestrian]
 
 ### Abstrakt
 
@@ -57,9 +54,9 @@ i symulacji. Przegląd obejmuje: różne kryteria modelowania, m.in jak szczegó
 
 **Forma symulacji:** Podejście entity-based. Każda jednostka nie będzie rozróżniana, każda będzie miała te same zdefiniowane prawa i statystyki.
 
-Zgodnie z modelem komórkowym, każda jednostka zajmować będzie dokładnie jedną przestrzeń na siatce. Decyzja o zmianie położenia na sąsiadujące komórki będzie podejmowana z określonym prawdopodobieństwem.
+Zgodnie z modelem komórkowym, każda jednostka zajmować będzie dokładnie jedną przestrzeń na siatce. Decyzja o zmianie położenia na sąsiadujące komórki będzie podejmowana z określonym prawdopodobieństwem. Ruch taki przedstawia rysunek \ref{imgRasouli1}.
 
-![Przykład symulacji 2D](img/RasouliND.png)
+![Jednostka wraz z możliwymi do podjęcia przez nią decyzjami o zmianie położenia (A) oraz macierz ich prawdopodobieństw (B) autorstwa [@rasouli2021pedestrian] \label{imgRasouli1}.](img/RasouliND.png)
 
 Przyjmujemy, że piesi mogą przekraczać ulice tylko w miejscach oznaczonych jako przejścia dla pieszych, zgodnie z następującymi zasadami:
 
@@ -69,19 +66,19 @@ Przyjmujemy, że piesi mogą przekraczać ulice tylko w miejscach oznaczonych ja
 
 # Źródła pomocnicze
 
-[@NagelSchreckenberg1992] - wprowadzenie teoretyczne do modelu Nagela-Schreckenberga, podstawy naszego systemu dynamicznego ruchu drogowego
+[@nagel1992cellular] - wprowadzenie teoretyczne do modelu Nagela-Schreckenberga, podstawy naszego systemu dynamicznego ruchu drogowego
 <!-- https://sci-hub.se/10.1051/jp1:1992277 -->
 
-[@Altmann] - praktyczne wskazówki do implementacji systemów dynamicznych
+[@altmannwriting] - praktyczne wskazówki do implementacji systemów dynamicznych
 <!-- https://users.cs.northwestern.edu/~agupta/_projects/networking/QueueSimulation/mm1.html -->
  
-[@Wiering2004] - przekrój metod symulacji ruchu drogowego z uwzględnieniem świateł ulicznych
+[@wiering2004simulation] - przekrój metod symulacji ruchu drogowego z uwzględnieniem świateł ulicznych
 <!-- https://dspace.library.uu.nl/bitstream/handle/1874/20840/wiering_04_simulation.pdf?sequence=2 -->
 
-[@Kotusevski2009] – przekrój rozwiązań zaimplementowanych w praktycznych symulatorach ruchu drogowego
+[@kotusevski2009review] – przekrój rozwiązań zaimplementowanych w praktycznych symulatorach ruchu drogowego
 <!-- https://mro.massey.ac.nz/bitstream/handle/10179/4506/TrafficSimulatorReview_arlims.pdf?sequence=1&isAllowed=y -->
 
- [@Cimr2000] – wprowadzenie do symulacji ruchu drogowego opartej na automatach komórkowych
+ [@cimr2000modelowanie] – wprowadzenie do symulacji ruchu drogowego opartej na automatach komórkowych
 <!-- http://delibra.bg.polsl.pl/Content/49959/BCPS-54366_2000_Modelowanie-stanow-d.pdf -->
 
 # Bibliografia
