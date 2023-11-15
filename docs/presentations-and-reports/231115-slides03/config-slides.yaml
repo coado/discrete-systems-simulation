@@ -1,0 +1,12 @@
+title: Symulacja ruchu drogowego na przykładzie ronda Grunwaldzkiego w Krakowie
+subtitle: |
+    Projekt zespołu 05 na przedmiot \
+    *Symulacja Systemów Dyskretnych*
+author: |
+    Łukasz Łabuz \
+    Dawid Małecki \
+    Mateusz Mazur
+header-includes:
+    - \usetheme {Antibes}
+    - \usepackage[polish]{babel} # sudo apt install texlive-lang-polish
+link-citations: true
