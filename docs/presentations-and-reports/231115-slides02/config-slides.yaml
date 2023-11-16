@@ -7,6 +7,5 @@ author: |
     Dawid Małecki \
     Mateusz Mazur
 header-includes:
-    - \usetheme {Antibes}
     - \usepackage[polish]{babel} # sudo apt install texlive-lang-polish
 link-citations: true
