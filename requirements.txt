@@ -1,5 +1,3 @@
 numpy
-matplotlib
-cellpylib
-jupyter
-ipympl
+networkx
+pygame # + conda install -c conda-forge libstdcxx-ng

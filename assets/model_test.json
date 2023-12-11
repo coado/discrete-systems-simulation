@@ -1,0 +1,87 @@
+{
+  "width": 1000,
+  "height": 800,
+  "background-src": "images/background.png",
+  "junctions": [
+    {
+      "id": 0,
+      "x": 80,
+      "y": 650
+    },
+    {
+      "id": 1,
+      "x": 370,
+      "y": 500
+    },
+    {
+      "id": 2,
+      "x": 380,
+      "y": 550
+    },
+    {
+      "id": 3,
+        "x": 550,
+        "y": 438
+    }
+  ],
+  "roadways": [
+    {
+      "id": 0,
+      "source": 0,
+      "target": 1,
+      "v_avg": 15,
+      "v_std": 1,
+      "type": "three_line"
+    },
+    {
+      "id": 1,
+      "source": 1,
+      "target": 2,
+      "v_avg": 15,
+      "v_std": 1,
+      "type": "one_line"
+    },
+    {
+      "id": 2,
+      "source": 2,
+      "target": 1,
+      "v_avg": 15,
+      "v_std": 1,
+      "type": "one_line"
+    },
+    {
+      "id": 3,
+      "source": 1,
+      "target": 3,
+      "v_avg": 15,
+      "v_std": 1,
+      "type": "three_line"
+    }
+  ],
+  "cars": [
+    {
+      "id": 0,
+      "roadway": 0,
+      "lane": 0,
+      "cell": 30,
+      "target_junction": 3,
+      "velocity": 15
+    },
+    {
+      "id": 1,
+      "roadway": 0,
+      "lane": 0,
+      "cell": 25,
+      "target_junction": 3,
+      "velocity": 20
+    },
+    {
+      "id": 2,
+      "roadway": 0,
+      "lane": 0,
+      "cell": 20,
+      "target_junction": 3,
+      "velocity": 25
+    }
+  ]
+}
