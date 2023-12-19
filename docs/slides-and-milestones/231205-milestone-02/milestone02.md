@@ -27,30 +27,17 @@ Celem projektu jest stworzenie modelu symulacyjnego ruchu drogowego na rondzie G
 
 ## Materiały źródłowe
 
-Poniższe materiały źródłowe stanowią podstawę, na bazie której stworzony został omawiany model formalny.
-
-- Gora P. *Adaptacyjne planowanie ruchu drogowego* [@gora2010adaptacyjne]
-- Rasouli A. *Pedestrian Simulation: A Review* [@rasouli2021pedestrian]
-
-<!-- ## Skale oraz technika symulacji
-
-W materiale [@rasouli2021pedestrian] przedstawione zostały definicje różnych skal oraz technik symulacji. W naszym projekcie wykorzystujemy następujące techniki oraz skale symulacji.
-
-### Techniki symulacji
-
-**Model komórkowy** - model polegający na dyskretyzacji obszarów, na których poruszają się symulowane jednostki. Według założenia, każda z nich może zajmować jedną komórkę na siatce w danym momencie. W każdym kroku symulacji, jednostki mogą zmienić swoją pozycję na sąsiednią komórkę.
-
-### Skale symulacji
-
-**Agent-Based** - skala, w której każda jednostka jest rozróżnialna, ma własne, zdefiniowane statystyki oraz zbiór możliwych do podjęcia decyzji. Na jej zachowanie ma wpływ otoczenie, infrastruktura czy też inne jednostki.
-
-**Entity-Based** - skala, w której jednostki są z założenia nierozróżnialne. Nie wyróżniają się niczym. Zachowują się według ściśle ustalonych reguł. Nie mają wpływu na otoczenie.  -->
+Materiały [@gora2010adaptacyjne], [@rasouli2021pedestrian] stanowią podstawę, na bazie której stworzony został omawiany model formalny.
 
 # Model formalny
 
 ## Model TSF
 
-Współcześnie najskuteczniejsze modele symulacji ruchu drogowego opierają się na teorii automatów komórkowych i modelu Nagela-Schreckenberga. Model ten służy on do symulacji ruchu pojazdów na prostym odcinku drogi. Jego istotnym rozszerzeniem tego modelu jest model TSF. Umożliwia on przeprowadzanie symulacji ruchu na rzeczywistych sieciach drogowych i rzeczywistych danych. Uwzglednia m.in. takie elementy jak:
+Współcześnie najskuteczniejsze modele symulacji ruchu drogowego opierają się na teorii automatów komórkowych i modelu Nagela-Schreckenberga ([@nagel1992cellular], [@gora2010adaptacyjne] ).
+Model ten służy on do symulacji ruchu pojazdów na prostym odcinku drogi.
+Jego istotnym rozszerzeniem tego modelu jest model TSF ([@gora2010adaptacyjne]).
+Umożliwia on przeprowadzanie symulacji ruchu na rzeczywistych sieciach drogowych i rzeczywistych danych.
+Uwzglednia m.in. takie elementy jak:
 
 - skrzyżowania,
 - rozróżnialność kierowców,
@@ -64,11 +51,11 @@ Nasz model bazować będzie na modelu TSF.
 
 Sieć drogowa w modelu TSF reprezentowana jest jako graf skierowany $G=(V,E)$, gdzie $V$ to zbiór wierzchołków, a $E\subseteq V \times V$ to zbiór krawędzi. Krawędzie reprezentują odcinki dróg, posiadają określone atrybuty:
 
-- długość,
-- ilość pasów ruchu,
-- średnią maksymalną prędkość jazdy, 
-- odchylenie standardowe powyższej prędkości,
-- typ drogi.
+- $d$ - długość,
+- $lanes$ - liczba pasów ruchu,
+- $v_avg$ - średnią maksymalną prędkość jazdy, 
+- $v_std$ odchylenie standardowe wartości $v_avg$,
+- $type$ - typ drogi.
 
 W obrębie danej krawędzi pasy ruchu są numerowane liczbami naturalnymi. W obrębie pojedynczego pasa, komórki również są numerowane. Komórkę jednoznacznie wyznacza więc trójka: $edge$, $lane$, $cell$. Wszystkie komórki na tej samej krawedzi mają jednakowość długość i wszystkie pasy ruchu na tej krawędzi są podzielone na tyle samo komórek o takiej samej długości.
 
@@ -175,11 +162,13 @@ Dla komórek ze zbioru CARS regułę przejścia definiuje algorytm przedstawiony
   
 ![Algorytm opisujący funkcję przejścia dla komórek ze zbioru $CARS$. Źródło: @gora2010adaptacyjne \label{alg:cars}](img/alg_cars.png)
 
-Dla komórek ze zbioru PEDESTRIANS regułę przejścia definiuje głownie macierz prawdopodobieństw $P$ oraz, w przypadku przechodzenia przez przejście dla pieszych, fragment algorytmu przedstawionego na rysunku \ref{alg:pedestrians}.
+Dla komórek ze zbioru PEDESTRIANS regułę przejścia definiuje głownie macierz prawdopodobieństw $P$ oraz, w przypadku przechodzenia przez przejście dla pieszych, fragment algorytmu przedstawionego na rysunkach \ref{alg:pedestrians}, \ref{alg:pedestrians_sub}.
 
 $P$ jest macierzą o wymiarach $3 \times 3$, która tworzona jest na bazie najbliższego otoczenia pieszego. Pieszy może zmienić pozycję na jedną z 8 sąsiednich komórek. W zależności od tego, czy pieszy chce skręcić, wyprzedzić innego pieszego, czy dalej kontynuować ruch prosto, prawdopodobieństwo zajęcia danej komórki jest różne.
 
-![Algorytm opisujący część funkcji przejścia dla komórek ze zbioru $PEDESTRIANS$. Źródło: @rasouli2021pedestrian \label{alg:pedestrians} ](image.png)
+![Algorytm opisujący część funkcji przejścia dla komórek ze zbioru $PEDESTRIANS$. Źródło: [@rasouli2021pedestrian] \label{alg:pedestrians} ](img/alg_pedestrians_1.png)
+
+![Algorytm opisujący część funkcji przejścia dla komórek ze zbioru $PEDESTRIANS$ - podproces 1. Źródło: [@rasouli2021pedestrian] \label{alg:pedestrians_sub} ](img/alg_pedestrians_2.png){width=80%}
 
 \newpage
 \newpage
