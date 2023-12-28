@@ -3,17 +3,17 @@ import networkx as nx
 import json
 import threading
 
-from .elements.tsf_objects.tsf_car import tsf_car
-from .elements.roadway import roadway
+from src.simulator.elements.tsf_objects.tsf_car import TsfCar
+from src.simulator.elements.roadway import Roadway
 
 
-class simulator:
+class Simulator:
     def __init__(self, source_file_name: str) -> None:
         self.graph: nx.DiGraph = nx.DiGraph()
         self.w = 0  # [m]
         self.h = 0  # [m]
-        self.cars: dict[int, tsf_car] = {}
-        self.edges_map: dict[int, roadway] = {}
+        self.cars: dict[int, TsfCar] = {}
+        self.edges_map: dict[int, Roadway] = {}
 
         self._step_time = 1  # [s]
 
@@ -39,12 +39,12 @@ class simulator:
             node_src = self.graph.nodes[edge["source"]]
             node_tgt = self.graph.nodes[edge["target"]]
             distance = np.sqrt((node_tgt["x"] - node_src["x"]) ** 2 + (node_tgt["y"] - node_src["y"]) ** 2)
-            rw = roadway(
+            rw = Roadway(
                 edge["id"],
                 distance,
                 edge["v_avg"],
                 edge["v_std"],
-                roadway.types[edge["type"]]
+                Roadway.types[edge["type"]]
             )
             self.graph.add_edge(
                 edge["source"],
@@ -55,7 +55,7 @@ class simulator:
 
         for c in source["cars"]:
             car_id = c["id"]
-            self.cars[car_id] = tsf_car(
+            self.cars[car_id] = TsfCar(
                 car_id,
                 c["roadway"],
                 c["lane"],
@@ -83,60 +83,88 @@ class simulator:
         self._is_running = False
 
     def _step(self) -> None:
+        ids_for_removal = []
         for car in self.cars.values():
-            self._step_car(car)
+            indicator = self._step_car(car)
+            if indicator == -1:
+                ids_for_removal.append(car.id)
+        for id in ids_for_removal:
+            self.cars.pop(id)
 
-    def _step_car(self, car: tsf_car) -> None:
-        x_rw = self.edges_map[car.rw]  # edge
+    def _step_car(self, car: TsfCar) -> int:
+        x_rw: Roadway = self.edges_map[car.rw]  # edge
         x_l = car.lane
         x_c = car.cell
 
-        current_junction_id = list(self.graph.edges)[x_rw.id][1]
+        closest_junction_id = [
+            e[1] for e in self.graph.edges.data()
+            if e[2]['roadway'].id == x_rw.id  # cannot use enumeration and compare i with id because of nx sorting edges
+        ][0]
         target_junction_id = car.target_junction
-        path = nx.astar_path(self.graph, current_junction_id, target_junction_id)
+        path = nx.astar_path(self.graph, closest_junction_id, target_junction_id)
 
         # if car is at the end of the road:
         if x_c == x_rw.cells.shape[1] - 1:
+            # @TODO: add traffic lights
+
             # if car is at the end of the path:
-            if path[-1] == current_junction_id:
-                # @FIXME : remove car from simulation
-                # cars are looping over last edge
+            if path[-1] == closest_junction_id:
                 self.edges_map[x_rw.id].free_cell(x_l, x_c)
-                del self.cars[car.id]
-                return
+                return -1
             else:
                 # get next road - edge between path[0] and path[1]
-                # @FIXME: include keeping line
                 next_road = self.graph.edges[path[0], path[1]]['roadway'].id
                 next_road_cells = self.edges_map[next_road].cells
                 next_road_first_cells = next_road_cells[:, 0]
                 empty_lanes = np.where(next_road_first_cells == -1)[0]
-                if len(empty_lanes) == 0:
+
+                n_lanes_in = x_rw.lanes
+                n_lanes_out = len(next_road_first_cells)
+                lane_id = x_l
+
+                l_bound = int(np.floor(lane_id / n_lanes_in * n_lanes_out))
+                u_bound = int(np.ceil((lane_id + 1) / n_lanes_in * n_lanes_out))
+
+                options = np.arange(n_lanes_out)[l_bound:u_bound]
+
+                next_lane = -1
+                for l in options:
+                    if next_road_first_cells[l] == -1:
+                        next_lane = l
+                        break
+
+                if next_lane == -1:
                     # stop car
                     car.velocity = 0
-                    return
+                    return 0
                 else:
                     # move car to next road
                     car.set_junction_velocity()
                     x_rw.free_cell(x_l, x_c)
                     x_rw = self.edges_map[next_road]
-                    x_l = empty_lanes[0]
+                    x_l = empty_lanes[next_lane]
                     x_c = 0
                     x_rw.cells[x_l, x_c] = car.id
                     car.rw = next_road
                     car.lane = x_l
                     car.cell = x_c
-                    return
+                    return 0
+
+        # @TODO: implement passing
 
         # check if car is in desired lane
         d_remaining = x_rw.distance - (x_c + 1) * x_rw.d_cell
         if d_remaining < 40 and np.random.random() > .66 \
                 or d_remaining < 20 and np.random.random() > .33 \
-                or d_remaining < 10\
+                or d_remaining < 10 \
                 or car.get_profile_parameter() > .5 and np.random.random() > .5:
-            l_desired_options = self._get_lane_pref_before_junction(path[0], x_rw.id, path[1])
+            if len(path) > 1:
+                l_desired_options = self._get_lane_pref_before_junction(path[0], x_rw.id, path[1])
+            else:  # last edge
+                l_desired_options = np.arange(x_rw.lanes)[::-1]
             if x_l not in l_desired_options:
-                l_desired = np.random.choice(l_desired_options)
+                l_desired = l_desired_options[0] if x_l > l_desired_options[0] else l_desired_options[
+                    -1]  # > because reversed
                 if x_rw.cells[l_desired, x_c] == -1 and np.random.random() > .5:
                     l_diff = l_desired - x_l
                     l_diff = max(-1, min(l_diff, 1))
@@ -144,12 +172,24 @@ class simulator:
                     x_rw.free_cell(x_l, x_c)
                     x_rw.cells[l_new, x_c] = car.id
                     car.lane = l_new
-                    return
+                    return 0
                 elif any(x_rw.cells[l_desired, x_c:] == -1):
                     pass
                 else:
                     car.velocity = 0
-                    return
+                    return 0
+            else:
+                for l in l_desired_options:
+                    if l == x_l:
+                        break
+                    if (abs(l - x_l) == 1  # if lane is adjacent
+                            and x_rw.cells[l, x_c] == -1  # if lane is empty
+                            and np.random.random() > .5  # randomize
+                    ):
+                        x_rw.free_cell(x_l, x_c)
+                        x_rw.cells[l, x_c] = car.id
+                        car.lane = l
+                        return 0
 
         # classic step
         d = x_rw.get_cell_distance()
@@ -213,19 +253,18 @@ class simulator:
                 self.graph.nodes[e[1]]['y'] - node['y'],
                 self.graph.nodes[e[1]]['x'] - node['x']
             )) - diff,
-             e[2]['roadway'].id)
+             e[2]['roadway'].id, e[1])
             for e in edges_out
         ]
 
         edges_out_d = sorted(edges_out_d, key=lambda x: x[0])
-        edges_out_d = [e[1] for e in edges_out_d]
-
-        roadway_id = edges_out_d.index(next_junction_id)
-        n_lanes = self.edges_map[edges_out_d[roadway_id]].lanes
+        edges_out_d = np.array([[e[1], e[2]] for e in edges_out_d])  # roadway ids, next junction ids
+        roadway_id = np.argwhere(edges_out_d[:, 1] == next_junction_id)[0][0]
+        n_lanes = edge_in[2]['roadway'].lanes
         n_roadways_out = len(edges_out_d)
 
-        options = np.arange(n_lanes)[
-                  int(np.floor(roadway_id * n_lanes / n_roadways_out)):
-                  int(np.ceil((roadway_id + 1) * n_lanes / n_roadways_out))
-        ]
-        return options
+        l_bound = int(np.floor(roadway_id / n_roadways_out * n_lanes))
+        u_bound = int(np.ceil((roadway_id + 1) / n_roadways_out * n_lanes))
+
+        options = np.arange(n_lanes)[l_bound:u_bound]
+        return options[::-1]  # reverse order

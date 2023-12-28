@@ -1,4 +1,2 @@
-
-
-class tsf_base_object:
+class TsfBaseObject:
     pass

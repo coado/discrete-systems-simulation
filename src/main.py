@@ -1,19 +1,19 @@
-from simulator.plotter import plotter
-from simulator.simulator import simulator
+from simulator.plotter import Plotter
+from simulator.simulator import Simulator
 
 
 def main():
-    sim = simulator("assets/model_test.json")
+    sim = Simulator("assets/model_test.json")
 
-    pl = plotter(
+    pl = Plotter(
         sim,
-        plot_graph_on_start = True,
+        plot_graph_on_start=True,
     )
     pl.run()
 
     sim.step(
-        steps=50,
-        t_gap=.5
+        steps=100,
+        t_gap=.1
     )
 
 

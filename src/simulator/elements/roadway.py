@@ -3,7 +3,7 @@ from math import ceil
 from enum import Enum
 
 
-class roadway:
+class Roadway:
     d_cell_avg = 5  # [m]
 
     class types(Enum):
@@ -27,10 +27,10 @@ class roadway:
         self.lanes: int = r_type.value if r_type.value < 5 else 1
         self.v_avg: float = v_avg  # [m/s]
         self.v_std: float = v_std  # [m/s]
-        self.type: roadway.types = r_type
+        self.type: Roadway.types = r_type
         self.traffic_light_at_end: int = traffic_light_at_end
 
-        n_cell = ceil(distance / roadway.d_cell_avg)
+        n_cell = ceil(distance / Roadway.d_cell_avg)
         self.n_cell: int = n_cell
         self.d_cell: float = distance / n_cell
 

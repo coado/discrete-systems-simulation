@@ -1,8 +1,8 @@
-from .tsf_base_object import tsf_base_object
+from src.simulator.elements.tsf_objects.tsf_base_object import TsfBaseObject
 import numpy as np
 
 
-class tsf_car(tsf_base_object):
+class TsfCar(TsfBaseObject):
     def __init__(
             self,
             id: int,
@@ -17,7 +17,7 @@ class tsf_car(tsf_base_object):
         self.lane: int = lane
         self.cell: int = cell
         self.profile: float = np.random.random()
-        self.velocity = velocity # [m/s]
+        self.velocity = velocity  # [m/s]
         self.target_junction: int = target_junction
 
         self._junction_velocity = 5 + self.get_profile_parameter()  # [m/s]
@@ -25,11 +25,16 @@ class tsf_car(tsf_base_object):
         self._color = self._generate_color()
 
     def _generate_color(self):
-        l_bound, u_bound = 50, 205
-        R = np.random.randint(l_bound, u_bound)
-        G = np.random.randint(l_bound, u_bound)
-        B = np.random.randint(l_bound, u_bound)
-        return (R, G, B)
+        bucket_size = 50
+        buckets = list(range(3))
+        np.random.shuffle(buckets)
+        color = np.zeros(3)
+        for i in range(3):
+            bucket = buckets.pop()
+            c = bucket * bucket_size + np.random.randint(bucket_size)
+            color[i] = c
+
+        return tuple(color)
 
     def adjust_velocity(self, velocity_diff: float):
         self.velocity += velocity_diff

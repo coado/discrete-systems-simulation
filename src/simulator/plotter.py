@@ -2,13 +2,13 @@ import numpy as np
 import pygame as pg
 import threading
 
-from src.simulator.simulator import simulator
+from src.simulator.simulator import Simulator
 
 
-class plotter:
+class Plotter:
     def __init__(
             self,
-            simulator: simulator,
+            simulator: Simulator,
             plot_graph_on_start: bool = False
     ) -> None:
         self.simulator: simulator = simulator

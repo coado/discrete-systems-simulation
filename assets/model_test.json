@@ -20,8 +20,8 @@
     },
     {
       "id": 3,
-        "x": 550,
-        "y": 438
+      "x": 550,
+      "y": 438
     }
   ],
   "roadways": [
@@ -80,7 +80,7 @@
       "roadway": 0,
       "lane": 1,
       "cell": 20,
-      "target_junction": 3,
+      "target_junction": 2,
       "velocity": 25
     }
   ]
