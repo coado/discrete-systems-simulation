@@ -99,12 +99,14 @@ class simulator:
         if x_c == x_rw.cells.shape[1] - 1:
             # if car is at the end of the path:
             if path[-1] == current_junction_id:
-                # remove car from simulation
+                # @FIXME : remove car from simulation
+                # cars are looping over last edge
                 self.edges_map[x_rw.id].free_cell(x_l, x_c)
                 del self.cars[car.id]
                 return
             else:
                 # get next road - edge between path[0] and path[1]
+                # @FIXME: include keeping line
                 next_road = self.graph.edges[path[0], path[1]]['roadway'].id
                 next_road_cells = self.edges_map[next_road].cells
                 next_road_first_cells = next_road_cells[:, 0]
@@ -125,8 +127,29 @@ class simulator:
                     car.lane = x_l
                     car.cell = x_c
                     return
-        # if car is on the road:
-        # @TODO: changing lanes based on path
+
+        # check if car is in desired lane
+        d_remaining = x_rw.distance - (x_c + 1) * x_rw.d_cell
+        if d_remaining < 40 and np.random.random() > .66 \
+                or d_remaining < 20 and np.random.random() > .33 \
+                or d_remaining < 10\
+                or car.get_profile_parameter() > .5 and np.random.random() > .5:
+            l_desired_options = self._get_lane_pref_before_junction(path[0], x_rw.id, path[1])
+            if x_l not in l_desired_options:
+                l_desired = np.random.choice(l_desired_options)
+                if x_rw.cells[l_desired, x_c] == -1 and np.random.random() > .5:
+                    l_diff = l_desired - x_l
+                    l_diff = max(-1, min(l_diff, 1))
+                    l_new = x_l + l_diff
+                    x_rw.free_cell(x_l, x_c)
+                    x_rw.cells[l_new, x_c] = car.id
+                    car.lane = l_new
+                    return
+                elif any(x_rw.cells[l_desired, x_c:] == -1):
+                    pass
+                else:
+                    car.velocity = 0
+                    return
 
         # classic step
         d = x_rw.get_cell_distance()
@@ -141,7 +164,7 @@ class simulator:
         d_remaining = x_rw.distance - (x_c + 1) * d
         if len(d_max) > 0:
             d_remaining = min(d_max, d_remaining)
-        d_safe_stop = ((v-v_end)/a_max)*(v/2+v_end/2) + d # distance to stop
+        d_safe_stop = ((v - v_end) / a_max) * (v / 2 + v_end / 2) + d  # distance to stop
         breaking = d_remaining < d_safe_stop
 
         v_road = x_rw.v_avg + x_rw.v_std * car.get_profile_parameter()
@@ -165,3 +188,44 @@ class simulator:
         x_rw.free_cell(x_l, x_c)
         x_rw.cells[x_l, x_c + d_c] = car.id
         car.cell += d_c
+
+    def _get_lane_pref_before_junction(
+            self,
+            junction_id: int,
+            rw_in_id: int,
+            next_junction_id: int
+    ):
+        node = self.graph.nodes[junction_id]
+        edge_in = [e for e in self.graph.edges.data() if e[2]['roadway'].id == rw_in_id][0]
+        edges_out = [
+            e for e in self.graph.edges.data()
+            if e[0] == junction_id
+        ]
+
+        with np.errstate(divide='ignore', invalid='ignore'):
+            diff = np.arctan(np.divide(
+                node['y'] - self.graph.nodes[edge_in[0]]['y'],
+                node['x'] - self.graph.nodes[edge_in[0]]['x'],
+            ))
+
+        edges_out_d = [  # calculate tan
+            (np.arctan(np.divide(
+                self.graph.nodes[e[1]]['y'] - node['y'],
+                self.graph.nodes[e[1]]['x'] - node['x']
+            )) - diff,
+             e[2]['roadway'].id)
+            for e in edges_out
+        ]
+
+        edges_out_d = sorted(edges_out_d, key=lambda x: x[0])
+        edges_out_d = [e[1] for e in edges_out_d]
+
+        roadway_id = edges_out_d.index(next_junction_id)
+        n_lanes = self.edges_map[edges_out_d[roadway_id]].lanes
+        n_roadways_out = len(edges_out_d)
+
+        options = np.arange(n_lanes)[
+                  int(np.floor(roadway_id * n_lanes / n_roadways_out)):
+                  int(np.ceil((roadway_id + 1) * n_lanes / n_roadways_out))
+        ]
+        return options
