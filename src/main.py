@@ -7,7 +7,7 @@ def main():
 
     pl = Plotter(
         sim,
-        plot_graph_on_start=True,
+        plot_graph_on_start=False,
     )
     pl.run()
 

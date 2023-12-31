@@ -71,17 +71,17 @@
       "id": 1,
       "roadway": 0,
       "lane": 1,
-      "cell": 25,
+      "cell": 1,
       "target_junction": 3,
-      "velocity": 20
+      "velocity": 25
     },
     {
       "id": 2,
       "roadway": 0,
       "lane": 1,
-      "cell": 20,
+      "cell": 2,
       "target_junction": 2,
-      "velocity": 25
+      "velocity": 15
     }
   ]
 }

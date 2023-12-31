@@ -111,7 +111,7 @@ class Simulator:
                 closest_junction_id,
                 target_junction_id
             )
-        except nx.NetworkXNoPath as e:
+        except nx.NetworkXNoPath:
             raise RuntimeError(f"Path between car {car.id} current position and its destination does not exist!")
 
         # if car is at the end of the road:
@@ -161,14 +161,13 @@ class Simulator:
                     car.cell = x_c
                     return 0
 
-        # @TODO: implement passing
-
         # check if car is in desired lane
         d_remaining = x_rw.distance - (x_c + 1) * x_rw.d_cell
         if d_remaining < 40 and np.random.random() > .66 \
                 or d_remaining < 20 and np.random.random() > .33 \
                 or d_remaining < 10 \
-                or car.get_profile_parameter() > .5 and np.random.random() > .5:
+                or np.random.random() > .6:
+                # or car.get_profile_parameter() > .5 and np.random.random() > .5:
             if len(path) > 1:
                 l_desired_options = self._get_lane_pref_before_junction(path[0], x_rw.id, path[1])
             else:  # last edge
@@ -200,9 +199,9 @@ class Simulator:
                         x_rw.free_cell(x_l, x_c)
                         x_rw.cells[l, x_c] = car.id
                         car.lane = l
-                        return 0
+                        x_l = l
+                        # return 0
 
-        # classic step
         d = x_rw.get_cell_distance()
         v = car.velocity
         t = self._step_time
@@ -210,16 +209,20 @@ class Simulator:
         d_max = np.where(x_rw.get_cells(x_l) != -1)[x_c + 1:]
         a_max = 1.25 + car.get_profile_parameter(0, 1)
 
-        v_end = car._junction_velocity if len(d_max) == 0 else 0
+        v_special = car._junction_velocity if len(d_max) == 0 else 0
 
         d_remaining = x_rw.distance - (x_c + 1) * d
         if len(d_max) > 0:
             d_remaining = min(d_max, d_remaining)
-        d_safe_stop = ((v - v_end) / a_max) * (v / 2 + v_end / 2) + d  # distance to stop
+        d_safe_stop = ((v - v_special) / a_max) * (v / 2 + v_special / 2) + d  # distance to stop
         breaking = d_remaining < d_safe_stop
 
-        v_road = x_rw.v_avg + x_rw.v_std * car.get_profile_parameter()
-        v_desired = v_end if breaking else v_road
+        v_diff_half = a_max / self._step_time / 2
+        v_normal = min(
+            car.velocity + v_diff_half * (1 + car.get_profile_parameter(l_bound=0)) ,
+            x_rw.v_avg + x_rw.v_std * car.get_profile_parameter()
+        )
+        v_desired = v_special if breaking else v_normal
 
         a = (v_desired - v) / t
         a = max(-a_max, min(a, a_max))
@@ -236,8 +239,29 @@ class Simulator:
             d_c = max(0, d_c)
             car.velocity -= d / t
 
-        x_rw.free_cell(x_l, x_c)
+        # wyprzedzanie
+        x_l_old = x_l
+        future_cell = car.cell + d_c
+        if x_l != 0 and future_cell < x_rw.n_cell - 3:
+            ahead_cell = future_cell + 1
+            cells_ahead = x_rw.get_cells(car.lane)[car.cell + 1:ahead_cell + 3]
+            car_ahead_id = np.where(cells_ahead != -1)[0]
+            if len(car_ahead_id) != 0:
+                car_ahead_id = cells_ahead[car_ahead_id[0]]
+                car_ahead = self.cars[car_ahead_id]
+                v_other = car_ahead.velocity
+                if v_other != 0 \
+                        and v / v_other >= 1.5:
+                    move_cells = x_rw.get_cells(x_l - 1)[future_cell - 2: future_cell]
+                    if all(move_cells == -1) and np.random.random() > .5:
+                        x_l -= 1
+                        car.velocity += 2
+
+        print(car.id, car.velocity)
+
+        x_rw.free_cell(x_l_old, x_c)
         x_rw.cells[x_l, x_c + d_c] = car.id
+        car.lane = x_l
         car.cell += d_c
 
     def _get_lane_pref_before_junction(

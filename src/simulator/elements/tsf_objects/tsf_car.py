@@ -36,14 +36,6 @@ class TsfCar(TsfBaseObject):
 
         return tuple(color)
 
-    def adjust_velocity(self, velocity_diff: float):
-        self.velocity += velocity_diff
-
-    def move_to(self, rw: int, lane: int, cell: int):
-        self.rw = rw
-        self.lane = lane
-        self.cell = cell
-
     def set_junction_velocity(self):
         self.velocity = self._junction_velocity
 
