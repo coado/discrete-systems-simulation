@@ -9,32 +9,38 @@ class Plotter:
     def __init__(
             self,
             simulator: Simulator,
-            plot_graph_on_start: bool = False
+            plot_graph_on_start: bool = False,
+            bg_opacity_on_start: float = .7,
+            print_controls=True
     ) -> None:
-        self.simulator: simulator = simulator
-        self.thread: threading.Thread = None
+        self._simulator: simulator = simulator
+        self._thread: threading.Thread = None
 
         (width, height) = (1920, 1080)
         root = pg.display.set_mode((width, height))  # , pg.FULLSCREEN)
         pg.display.set_caption('Traffic Simulator')
         root.fill((50, 50, 50))
-        self.root: pg.Surface = root
-        self.surface: pg.Surface = pg.Surface((
-            self.rescale(self.simulator.w),
-            self.rescale(self.simulator.h)
+        self._root: pg.Surface = root
+        self._surface: pg.Surface = pg.Surface((
+            self.rescale(self._simulator.w),
+            self.rescale(self._simulator.h)
         ))
 
-        self.d_x = 0
-        self.d_y = 0
-        self.scale = 1
-        self.scale_max = 3
-        self.scale_min = 0.9
+        self._d_x = 0
+        self._d_y = 0
+        self._scale = 1
+        self._scale_max = 3
+        self._scale_min = 0.9
 
-        self.plot_graph = plot_graph_on_start
+        self._plot_graph = plot_graph_on_start
+        self._bg_opacity = max(0., min(bg_opacity_on_start, 1.))
+
+        if print_controls:
+            self.print_controls()
 
     def run(self):
-        self.thread = threading.Thread(target=self._run, args=[])
-        self.thread.start()
+        self._thread = threading.Thread(target=self._run, args=[])
+        self._thread.start()
 
     def rescale(self, value: float) -> float:
         resolution = 2
@@ -55,71 +61,83 @@ class Plotter:
                 ):
                     running = False
                 if event.type == pg.KEYDOWN and event.key == pg.K_g:
-                    self.plot_graph = not self.plot_graph
+                    self._plot_graph = not self._plot_graph
             pressed_keys = pg.key.get_pressed()
             if pressed_keys[pg.K_UP]:
-                self.d_y += 10 * self.scale
+                self._d_y += 10 * self._scale
             if pressed_keys[pg.K_DOWN]:
-                self.d_y -= 10 * self.scale
+                self._d_y -= 10 * self._scale
             if pressed_keys[pg.K_LEFT]:
-                self.d_x += 10 * self.scale
+                self._d_x += 10 * self._scale
             if pressed_keys[pg.K_RIGHT]:
-                self.d_x -= 10 * self.scale
+                self._d_x -= 10 * self._scale
             if pressed_keys[pg.K_z]:
-                if self.scale < self.scale_max:
-                    self.scale += 0.1
+                if self._scale < self._scale_max:
+                    self._scale += 0.1
                 else:
-                    self.scale = self.scale_max
+                    self._scale = self._scale_max
             if pressed_keys[pg.K_x]:
-                if self.scale > self.scale_min:
-                    self.scale -= 0.1
+                if self._scale > self._scale_min:
+                    self._scale -= 0.1
                 else:
-                    self.scale = self.scale_min
+                    self._scale = self._scale_min
             if pressed_keys[pg.K_c]:
-                self.d_x = 0
-                self.d_y = 0
-                self.scale = 1
+                self._d_x = 0
+                self._d_y = 0
+                self._scale = 1
+            if pressed_keys[pg.K_o]:
+                self._bg_opacity = min(self._bg_opacity + .1, 1)
+            if pressed_keys[pg.K_p]:
+                self._bg_opacity = max(self._bg_opacity - .1, 0)
 
             self._draw()
-        self.simulator.stop()
+        self._simulator.stop()
 
     def _draw(self):
 
         # plot background
 
-        self.root.fill((50, 50, 50))
+        self._root.fill((50, 50, 50))
 
         bg_img = pg.image.load('assets/tlo-symulacji.png')
         bg_img = pg.transform.scale(bg_img, (
-            self.rescale(self.simulator.w),
-            self.rescale(self.simulator.h)
+            self.rescale(self._simulator.w),
+            self.rescale(self._simulator.h)
         ))
-        self.surface.blit(bg_img, (0, 0))
+        self._surface.blit(bg_img, (0, 0))
+
+        s = pg.Surface((
+            self.rescale(self._simulator.w),
+            self.rescale(self._simulator.h)
+        ))
+        s.set_alpha(int(self._bg_opacity * 255))  # alpha level
+        s.fill(pg.Color('white'))  # this fills the entire surface
+        self._surface.blit(s, (0, 0))  # (0,0) are the top-left coordinates
 
         # plot all shit
 
-        if self.plot_graph:
+        if self._plot_graph:
             self.__blit_nodes()
 
         self.__blit_edges(
-            plot_inactive_cells=self.plot_graph,
-            plot_lines=self.plot_graph,
+            plot_inactive_cells=self._plot_graph,
+            plot_lines=self._plot_graph,
             inactive_state=-1
         )
 
         # plot view
 
-        init_scale_x = self.root.get_width() / self.surface.get_width()
-        init_scale_y = self.root.get_height() / self.surface.get_height()
+        init_scale_x = self._root.get_width() / self._surface.get_width()
+        init_scale_y = self._root.get_height() / self._surface.get_height()
         init_scale = min(init_scale_x, init_scale_y)
 
-        init_pos_x = (self.root.get_width() - self.surface.get_width()) / 2
-        init_pos_y = (self.root.get_height() - self.surface.get_height()) / 2
+        init_pos_x = (self._root.get_width() - self._surface.get_width()) / 2
+        init_pos_y = (self._root.get_height() - self._surface.get_height()) / 2
 
-        old_w = self.surface.get_width()
-        old_h = self.surface.get_height()
-        scale = self.scale
-        new_surface = self.surface
+        old_w = self._surface.get_width()
+        old_h = self._surface.get_height()
+        scale = self._scale
+        new_surface = self._surface
         new_surface = pg.transform.scale(new_surface, (
             int(old_w * scale * init_scale),
             int(old_h * scale * init_scale)
@@ -128,11 +146,11 @@ class Plotter:
         d_x = (old_w - new_surface.get_width()) // 2
         d_y = (old_h - new_surface.get_height()) // 2
 
-        self.root.blit(
+        self._root.blit(
             new_surface,
             (
-                init_pos_x + self.d_x + d_x,
-                init_pos_y + self.d_y + d_y
+                init_pos_x + self._d_x + d_x,
+                init_pos_y + self._d_y + d_y
             )
         )
 
@@ -141,9 +159,9 @@ class Plotter:
     def __blit_nodes(
             self,
     ):
-        for id, node in self.simulator.graph.nodes.data():
+        for id, node in self._simulator.graph.nodes.data():
             pg.draw.circle(
-                self.surface,
+                self._surface,
                 pg.Color('gray'),
                 (
                     self.rescale(node['x']),
@@ -168,9 +186,9 @@ class Plotter:
             inactive_state=-1
     ):
 
-        for source, target, data in self.simulator.graph.edges.data():
-            source_pos = self.simulator.graph.nodes[source]
-            target_pos = self.simulator.graph.nodes[target]
+        for source, target, data in self._simulator.graph.edges.data():
+            source_pos = self._simulator.graph.nodes[source]
+            target_pos = self._simulator.graph.nodes[target]
             rd = data['roadway']
 
             lines = rd.lanes
@@ -185,7 +203,7 @@ class Plotter:
                 # if lane in oposite direction exists:
 
                 shift_x, shift_y = 0, 0
-                if self.simulator.graph.has_edge(target, source):
+                if self._simulator.graph.has_edge(target, source):
                     negative = 1
                     if target > source:
                         negative = -1
@@ -205,7 +223,7 @@ class Plotter:
 
                 if plot_lines:
                     pg.draw.line(
-                        self.surface,
+                        self._surface,
                         (0, 0, 0),
                         start,
                         end,
@@ -215,10 +233,10 @@ class Plotter:
                 for i, cell in enumerate(rd.get_cells(i)):
                     color = pg.Color('black')
                     if cell != inactive_state:
-                        color = self.simulator.cars[cell]._color
+                        color = self._simulator.cars[cell]._color
                     if cell != inactive_state or plot_inactive_cells:
                         pg.draw.circle(
-                            self.surface,
+                            self._surface,
                             color,
                             (
                                 int(start[0] + (end[0] - start[0]) * (i + 1) / rd.n_cell + cell_r / 2),
@@ -231,7 +249,16 @@ class Plotter:
         span_id = font.render(text, False, color)
         w, h = span_id.get_width(), span_id.get_height()
         pos = (pos[0] - w // 2, pos[1] - h // 2)
-        self.surface.blit(span_id, pos)
+        self._surface.blit(span_id, pos)
 
     def quit(self) -> None:
         pg.quit()
+
+    def print_controls(self):
+        print("Plotter controls:")
+        print(" - quit: q/esc")
+        print(" - movement: arrows")
+        print(" - zoom: z/x")
+        print(" - default zoom and position: c")
+        print(" - hide/show graph: g")
+        print(" - background opacity: o/p")
