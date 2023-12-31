@@ -48,3 +48,14 @@ class Roadway:
 
     def free_cell(self, lane: int, cell: int) -> None:
         self.cells[lane, cell] = -1
+
+    def is_type_for_cars(self):
+        return self.type in [
+            Roadway.types.one_line,
+            Roadway.types.two_line,
+            Roadway.types.three_line,
+            Roadway.types.four_line
+        ]
+
+    def is_type_for_pedestrians(self):
+        return self.type is Roadway.types.pavement

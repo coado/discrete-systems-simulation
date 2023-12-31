@@ -96,12 +96,23 @@ class Simulator:
         x_l = car.lane
         x_c = car.cell
 
+        car_roadways_subgraph = self.get_roadways_for_cars_subgraph()
+
         closest_junction_id = [
-            e[1] for e in self.graph.edges.data()
+            e[1] for e in car_roadways_subgraph.edges.data()
             if e[2]['roadway'].id == x_rw.id  # cannot use enumeration and compare i with id because of nx sorting edges
         ][0]
         target_junction_id = car.target_junction
-        path = nx.astar_path(self.graph, closest_junction_id, target_junction_id)
+
+        path = None
+        try:
+            path = nx.astar_path(
+                car_roadways_subgraph,
+                closest_junction_id,
+                target_junction_id
+            )
+        except nx.NetworkXNoPath as e:
+            raise RuntimeError(f"Path between car {car.id} current position and its destination does not exist!")
 
         # if car is at the end of the road:
         if x_c == x_rw.cells.shape[1] - 1:
@@ -113,7 +124,7 @@ class Simulator:
                 return -1
             else:
                 # get next road - edge between path[0] and path[1]
-                next_road = self.graph.edges[path[0], path[1]]['roadway'].id
+                next_road = car_roadways_subgraph.edges[path[0], path[1]]['roadway'].id
                 next_road_cells = self.edges_map[next_road].cells
                 next_road_first_cells = next_road_cells[:, 0]
                 empty_lanes = np.where(next_road_first_cells == -1)[0]
@@ -235,23 +246,24 @@ class Simulator:
             rw_in_id: int,
             next_junction_id: int
     ):
-        node = self.graph.nodes[junction_id]
-        edge_in = [e for e in self.graph.edges.data() if e[2]['roadway'].id == rw_in_id][0]
+        car_roadways_subgraph = self.get_roadways_for_cars_subgraph()
+        node = car_roadways_subgraph.nodes[junction_id]
+        edge_in = [e for e in car_roadways_subgraph.edges.data() if e[2]['roadway'].id == rw_in_id][0]
         edges_out = [
-            e for e in self.graph.edges.data()
+            e for e in car_roadways_subgraph.edges.data()
             if e[0] == junction_id
         ]
 
         with np.errstate(divide='ignore', invalid='ignore'):
             diff = np.arctan(np.divide(
-                node['y'] - self.graph.nodes[edge_in[0]]['y'],
-                node['x'] - self.graph.nodes[edge_in[0]]['x'],
+                node['y'] - car_roadways_subgraph.nodes[edge_in[0]]['y'],
+                node['x'] - car_roadways_subgraph.nodes[edge_in[0]]['x'],
             ))
 
         edges_out_d = [  # calculate tan
             (np.arctan(np.divide(
-                self.graph.nodes[e[1]]['y'] - node['y'],
-                self.graph.nodes[e[1]]['x'] - node['x']
+                car_roadways_subgraph.nodes[e[1]]['y'] - node['y'],
+                car_roadways_subgraph.nodes[e[1]]['x'] - node['x']
             )) - diff,
              e[2]['roadway'].id, e[1])
             for e in edges_out
@@ -268,3 +280,17 @@ class Simulator:
 
         options = np.arange(n_lanes)[l_bound:u_bound]
         return options[::-1]  # reverse order
+
+    def get_roadways_for_cars_subgraph(self):
+        g = nx.DiGraph()
+        g.add_nodes_from(self.graph.nodes.data())
+        e = [e for e in self.graph.edges.data() if e[2]['roadway'].is_type_for_cars()]
+        g.add_edges_from(e)
+        return g
+
+    def get_roadways_for_pedestrians_subgraph(self):
+        g = nx.DiGraph()
+        g.add_nodes_from(self.graph.nodes.data())
+        e = [e for e in self.graph.edges.data() if e[2]['roadway'].is_type_for_pedestrians()]
+        g.add_edges_from(e)
+        return g

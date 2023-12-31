@@ -13,7 +13,7 @@ def main():
 
     sim.step(
         steps=100,
-        t_gap=.1
+        t_gap=.5
     )
 
 
