@@ -121,7 +121,7 @@ class Plotter:
 
         self.__blit_edges(
             plot_inactive_cells=self._plot_graph,
-            plot_lines=self._plot_graph,
+            # plot_lines=self._plot_graph,
             inactive_state=-1
         )
 
@@ -167,7 +167,7 @@ class Plotter:
                     self.rescale(node['x']),
                     self.rescale(node['y'])
                 ),
-                self.rescale(10)
+                self.rescale(10),
             )
             # if plot_indicator:
             #     self._blit_text(
@@ -231,9 +231,11 @@ class Plotter:
                     )
 
                 for i, cell in enumerate(rd.get_cells(i)):
+                    r = cell_r / 3
                     color = pg.Color('black')
                     if cell != inactive_state:
                         color = self._simulator.cars[cell]._color
+                        r = cell_r
                     if cell != inactive_state or plot_inactive_cells:
                         pg.draw.circle(
                             self._surface,
@@ -242,7 +244,7 @@ class Plotter:
                                 int(start[0] + (end[0] - start[0]) * (i + 1) / rd.n_cell + cell_r / 2),
                                 int(start[1] + (end[1] - start[1]) * (i + 1) / rd.n_cell + cell_r / 2)
                             ),
-                            self.rescale(cell_r)
+                            self.rescale(r),
                         )
 
     def __blit_text(self, text, pos, font, color=pg.Color('black')):

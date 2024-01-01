@@ -3,6 +3,7 @@ import networkx as nx
 import json
 import threading
 
+from src.simulator.elements.spawner import Spawner
 from src.simulator.elements.tsf_objects.tsf_car import TsfCar
 from src.simulator.elements.roadway import Roadway
 
@@ -14,6 +15,8 @@ class Simulator:
         self.h = 0  # [m]
         self.cars: dict[int, TsfCar] = {}
         self.edges_map: dict[int, Roadway] = {}
+        self.spawners: dict[int, Spawner] = {}
+        self.terminal_junctions: list[int] = []
 
         self._step_time = 1  # [s]
 
@@ -34,6 +37,8 @@ class Simulator:
                 x=node["x"],
                 y=node["y"]
             )
+            if node["terminal"]:
+                self.terminal_junctions.append(node["id"])
 
         for edge in source["roadways"]:
             node_src = self.graph.nodes[edge["source"]]
@@ -65,6 +70,16 @@ class Simulator:
             )
             self.edges_map[c["roadway"]].cells[c["lane"], c["cell"]] = car_id
 
+        for s in source['spawners']:
+            if len([e for e in self.graph.edges.data() if e[0] == s['junction']]) == 0:
+                raise RuntimeError(f"Spawner {s['junction']} does not have any outgoing edges!")
+            self.spawners[s['junction']] = Spawner(
+                s['junction'],
+                s['spawn_rate'],
+                s['spawn_rate_std'],
+                s['random_delay_on_start']
+            )
+
     def stop(self) -> None:
         self._is_running = False
 
@@ -90,13 +105,17 @@ class Simulator:
                 ids_for_removal.append(car.id)
         for id in ids_for_removal:
             self.cars.pop(id)
+        for s in self.spawners.values():
+            if s.step(self._step_time):
+                self._spawn_car(s._junction)
+
 
     def _step_car(self, car: TsfCar) -> int:
         x_rw: Roadway = self.edges_map[car.rw]  # edge
         x_l = car.lane
         x_c = car.cell
 
-        car_roadways_subgraph = self.get_roadways_for_cars_subgraph()
+        car_roadways_subgraph = self._get_roadways_for_cars_subgraph()
 
         closest_junction_id = [
             e[1] for e in car_roadways_subgraph.edges.data()
@@ -112,7 +131,9 @@ class Simulator:
                 target_junction_id
             )
         except nx.NetworkXNoPath:
-            raise RuntimeError(f"Path between car {car.id} current position and its destination does not exist!")
+            raise RuntimeError(f"Path between car {car.id} "
+                               f"current position ({closest_junction_id}) "
+                               f"and its destination ({target_junction_id}) does not exist!")
 
         # if car is at the end of the road:
         if x_c == x_rw.cells.shape[1] - 1:
@@ -257,8 +278,6 @@ class Simulator:
                         x_l -= 1
                         car.velocity += 2
 
-        print(car.id, car.velocity)
-
         x_rw.free_cell(x_l_old, x_c)
         x_rw.cells[x_l, x_c + d_c] = car.id
         car.lane = x_l
@@ -270,7 +289,7 @@ class Simulator:
             rw_in_id: int,
             next_junction_id: int
     ):
-        car_roadways_subgraph = self.get_roadways_for_cars_subgraph()
+        car_roadways_subgraph = self._get_roadways_for_cars_subgraph()
         node = car_roadways_subgraph.nodes[junction_id]
         edge_in = [e for e in car_roadways_subgraph.edges.data() if e[2]['roadway'].id == rw_in_id][0]
         edges_out = [
@@ -305,16 +324,44 @@ class Simulator:
         options = np.arange(n_lanes)[l_bound:u_bound]
         return options[::-1]  # reverse order
 
-    def get_roadways_for_cars_subgraph(self):
+    def _get_roadways_for_cars_subgraph(self):
         g = nx.DiGraph()
         g.add_nodes_from(self.graph.nodes.data())
         e = [e for e in self.graph.edges.data() if e[2]['roadway'].is_type_for_cars()]
         g.add_edges_from(e)
         return g
 
-    def get_roadways_for_pedestrians_subgraph(self):
+    def _get_roadways_for_pedestrians_subgraph(self):
         g = nx.DiGraph()
         g.add_nodes_from(self.graph.nodes.data())
         e = [e for e in self.graph.edges.data() if e[2]['roadway'].is_type_for_pedestrians()]
         g.add_edges_from(e)
         return g
+
+    def _spawn_car(self, junction_id: int):
+        car_roadways_subgraph = self._get_roadways_for_cars_subgraph()
+        edges_out = [e for e in car_roadways_subgraph.edges.data() if e[0] == junction_id]
+        edges_out = np.array(edges_out)
+        edges_out = edges_out[np.random.permutation(len(edges_out))]
+        edge = edges_out[0]
+        rw: Roadway = edge[2]['roadway']
+        first_cells = rw.cells[:, 0]
+        empty_lanes = np.where(first_cells == -1)[0]
+
+        lane = np.random.choice(empty_lanes)
+        cell = 0
+        car_id = max(self.cars.keys()) + 1 if len(self.cars) > 0 else 0
+
+        destinations = [ j for j in self.terminal_junctions if j != junction_id ]
+        if len(destinations) == 0:
+            raise RuntimeError("No destinations for cars!")
+        destination = np.random.choice(destinations)
+
+        self.cars[car_id] = TsfCar(
+            car_id,
+            rw.id,
+            lane,
+            cell,
+            destination
+        )
+
