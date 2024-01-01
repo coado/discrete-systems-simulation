@@ -1,4 +1,4 @@
-from src.simulator.elements.tsf_objects.tsf_base_object import TsfBaseObject
+from simulator.elements.tsf_objects.tsf_base_object import TsfBaseObject
 import numpy as np
 
 

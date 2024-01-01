@@ -75,7 +75,7 @@
       "id": 1,
       "roadway": 0,
       "lane": 1,
-      "cell": 1,
+      "cell": 31,
       "target_junction": 3,
       "velocity": 25
     },
@@ -83,24 +83,37 @@
       "id": 2,
       "roadway": 0,
       "lane": 1,
-      "cell": 2,
+      "cell": 32,
       "target_junction": 2,
       "velocity": 15
     }
   ],
-  "spawners": [
+  "lights": [
     {
+      "id": 0,
       "junction": 0,
-      "spawn_rate": 0.5,
-      "spawn_rate_std": 0,
-      "random_delay_on_start": false
+      "duration": 20,
+      "state": "red"
     },
-
     {
+      "id": 1,
+      "junction": 1,
+      "duration": 20,
+      "state":  "red"
+    },
+    {
+      "id": 2,
       "junction": 2,
-      "spawn_rate": 0.2,
-      "spawn_rate_std": 0,
-      "random_delay_on_start": false
+      "duration": 20,
+      "state":  "red"
+    },
+    {
+      "id": 3,
+      "junction": 3,
+      "duration": 20,
+      "state":  "red"
     }
+  ],
+  "spawners": [
   ]
 }

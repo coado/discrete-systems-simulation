@@ -6,6 +6,7 @@ import threading
 from src.simulator.elements.spawner import Spawner
 from src.simulator.elements.tsf_objects.tsf_car import TsfCar
 from src.simulator.elements.roadway import Roadway
+from src.simulator.elements.light import Light
 
 
 class Simulator:
@@ -17,6 +18,7 @@ class Simulator:
         self.edges_map: dict[int, Roadway] = {}
         self.spawners: dict[int, Spawner] = {}
         self.terminal_junctions: list[int] = []
+        self.lights: dict[int, Light] = {} # junction - light
 
         self._step_time = 1  # [s]
 
@@ -70,6 +72,15 @@ class Simulator:
             )
             self.edges_map[c["roadway"]].cells[c["lane"], c["cell"]] = car_id
 
+        # lights
+        for l in source["lights"]:
+            self.lights[l["junction"]] = Light(
+                l["id"],
+                l["duration"],
+                l["junction"],
+                Light.State.RED if l["state"] == "red" else Light.State.GREEN
+            )
+
         for s in source['spawners']:
             if len([e for e in self.graph.edges.data() if e[0] == s['junction']]) == 0:
                 raise RuntimeError(f"Spawner {s['junction']} does not have any outgoing edges!")
@@ -99,6 +110,7 @@ class Simulator:
 
     def _step(self) -> None:
         ids_for_removal = []
+        self._step_lights()
         for car in self.cars.values():
             indicator = self._step_car(car)
             if indicator == -1:
@@ -109,6 +121,10 @@ class Simulator:
             if s.step(self._step_time):
                 self._spawn_car(s._junction)
 
+
+    def _step_lights(self):
+        for light in self.lights.values():
+            light.step(self._step_time)
 
     def _step_car(self, car: TsfCar) -> int:
         x_rw: Roadway = self.edges_map[car.rw]  # edge
@@ -137,7 +153,10 @@ class Simulator:
 
         # if car is at the end of the road:
         if x_c == x_rw.cells.shape[1] - 1:
-            # @TODO: add traffic lights
+            lights = self.lights[closest_junction_id]
+            if lights.state == Light.State.RED:
+                car.velocity = 0
+                return 0
 
             # if car is at the end of the path:
             if path[-1] == closest_junction_id:

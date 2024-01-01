@@ -189,6 +189,7 @@ class Plotter:
         for source, target, data in self._simulator.graph.edges.data():
             source_pos = self._simulator.graph.nodes[source]
             target_pos = self._simulator.graph.nodes[target]
+            lights = self._simulator.lights[source]
             rd = data['roadway']
 
             lines = rd.lanes
@@ -199,7 +200,7 @@ class Plotter:
             opposite_line_padding = line_padding * 2
             line_width = 1
             cell_r = 2
-            for i in range(lines):
+            for line_index in range(lines):
                 # if lane in oposite direction exists:
 
                 shift_x, shift_y = 0, 0
@@ -210,8 +211,8 @@ class Plotter:
                     shift_x = np.cos(rot + np.pi / 2) * opposite_line_padding // 2 * negative
                     shift_y = np.sin(rot + np.pi / 2) * opposite_line_padding // 2 * negative
 
-                d_x = np.cos(rot + np.pi / 2) * ((i - (lines - 1) / 2) * line_padding + shift_x)
-                d_y = np.sin(rot + np.pi / 2) * ((i - (lines - 1) / 2) * line_padding + shift_y)
+                d_x = np.cos(rot + np.pi / 2) * ((line_index - (lines - 1) / 2) * line_padding + shift_x)
+                d_y = np.sin(rot + np.pi / 2) * ((line_index - (lines - 1) / 2) * line_padding + shift_y)
                 start = (
                     self.rescale(source_pos['x'] + d_x),
                     self.rescale(source_pos['y'] + d_y)
@@ -230,9 +231,17 @@ class Plotter:
                         int(self.rescale(line_width))
                     )
 
-                for i, cell in enumerate(rd.get_cells(i)):
+                line_length = len(rd.get_cells(line_index))
+                for i, cell in enumerate(rd.get_cells(line_index)):
                     r = cell_r / 3
                     color = pg.Color('black')
+
+                    if lights is not None and i == line_length - 1:
+                        if lights.state == lights.state.RED:
+                            color = pg.Color('red')
+                        elif lights.state == lights.state.GREEN:
+                            color = pg.Color('green')
+
                     if cell != inactive_state:
                         color = self._simulator.cars[cell]._color
                         r = cell_r

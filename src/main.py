@@ -12,7 +12,7 @@ def main():
     pl.run()
 
     sim.step(
-        steps=100,
+        steps=500,
         t_gap=.5
     )
 
