@@ -139,7 +139,6 @@ class Simulator:
         ][0]
         target_junction_id = car.target_junction
 
-        path = None
         try:
             path = nx.astar_path(
                 car_roadways_subgraph,
@@ -151,70 +150,86 @@ class Simulator:
                                f"current position ({closest_junction_id}) "
                                f"and its destination ({target_junction_id}) does not exist!")
 
+        # ======================
         # if car is at the end of the road:
         if x_c == x_rw.cells.shape[1] - 1:
+
+            # ============
+            # lights
             lights = self.lights[closest_junction_id]
             if lights.state == Light.State.RED:
                 car.velocity = 0
                 return 0
 
-            # if car is at the end of the path:
+            # ============
+            # reaching destination
             if path[-1] == closest_junction_id:
                 self.edges_map[x_rw.id].free_cell(x_l, x_c)
                 return -1
+
+            # ============
+            # changing road
+
+            next_road = car_roadways_subgraph.edges[path[0], path[1]]['roadway'].id
+            next_road_cells = self.edges_map[next_road].cells
+            next_road_first_cells = next_road_cells[:, 0]
+            empty_lanes = np.where(next_road_first_cells == -1)[0]
+
+            n_lanes_in = x_rw.lanes
+            n_lanes_out = len(next_road_first_cells)
+            lane_id = x_l
+
+            l_bound = int(np.floor(lane_id / n_lanes_in * n_lanes_out))
+            u_bound = int(np.ceil((lane_id + 1) / n_lanes_in * n_lanes_out))
+
+            options = np.arange(n_lanes_out)[l_bound:u_bound]
+
+            next_lane = -1
+            for ln in options:
+                if next_road_first_cells[ln] == -1:
+                    next_lane = ln
+                    break
+
+            if next_lane == -1:
+                # stop car
+                car.velocity = 0
+                return 0
             else:
-                # get next road - edge between path[0] and path[1]
-                next_road = car_roadways_subgraph.edges[path[0], path[1]]['roadway'].id
-                next_road_cells = self.edges_map[next_road].cells
-                next_road_first_cells = next_road_cells[:, 0]
-                empty_lanes = np.where(next_road_first_cells == -1)[0]
+                # move car to next road
+                car.set_junction_velocity()
+                x_rw.free_cell(x_l, x_c)
+                x_rw = self.edges_map[next_road]
+                x_l = empty_lanes[next_lane]
+                x_c = 0
+                x_rw.cells[x_l, x_c] = car.id
+                car.rw = next_road
+                car.lane = x_l
+                car.cell = x_c
+                return 0
 
-                n_lanes_in = x_rw.lanes
-                n_lanes_out = len(next_road_first_cells)
-                lane_id = x_l
+        # ======================
+        # changing line before junctions
 
-                l_bound = int(np.floor(lane_id / n_lanes_in * n_lanes_out))
-                u_bound = int(np.ceil((lane_id + 1) / n_lanes_in * n_lanes_out))
-
-                options = np.arange(n_lanes_out)[l_bound:u_bound]
-
-                next_lane = -1
-                for l in options:
-                    if next_road_first_cells[l] == -1:
-                        next_lane = l
-                        break
-
-                if next_lane == -1:
-                    # stop car
-                    car.velocity = 0
-                    return 0
-                else:
-                    # move car to next road
-                    car.set_junction_velocity()
-                    x_rw.free_cell(x_l, x_c)
-                    x_rw = self.edges_map[next_road]
-                    x_l = empty_lanes[next_lane]
-                    x_c = 0
-                    x_rw.cells[x_l, x_c] = car.id
-                    car.rw = next_road
-                    car.lane = x_l
-                    car.cell = x_c
-                    return 0
-
-        # check if car is in desired lane
         d_remaining = x_rw.distance - (x_c + 1) * x_rw.d_cell
         if d_remaining < 40 and np.random.random() > .66 \
                 or d_remaining < 20 and np.random.random() > .33 \
                 or d_remaining < 10 \
                 or np.random.random() > .6:
                 # or car.get_profile_parameter() > .5 and np.random.random() > .5:
+
+            # choosing lanes that satisfy the conditions
             if len(path) > 1:
                 l_desired_options = self._get_lane_pref_before_junction(path[0], x_rw.id, path[1])
             else:  # last edge
                 l_desired_options = np.arange(x_rw.lanes)[::-1]
+
+            # ============
+            # if car is not on the desired road ...
             if x_l not in l_desired_options:
                 l_desired = l_desired_options[0] if x_l > l_desired_options[0] else l_desired_options[
                     -1]  # > because reversed
+
+                # ... and there is a free lane on the desired road, change lane
                 if x_rw.cells[l_desired, x_c] == -1 and np.random.random() > .5:
                     l_diff = l_desired - x_l
                     l_diff = max(-1, min(l_diff, 1))
@@ -223,24 +238,33 @@ class Simulator:
                     x_rw.cells[l_new, x_c] = car.id
                     car.lane = l_new
                     return 0
+                # ... and there is no free lane on the desired road,
+                #     but there is some space ahead, continue ahead
                 elif any(x_rw.cells[l_desired, x_c:] == -1):
                     pass
+                # ... and there is no free lane on the desired road,
+                #     and there is no space ahead, stop
                 else:
                     car.velocity = 0
                     return 0
+            # if car is on the desired road ...
             else:
-                for l in l_desired_options:
-                    if l == x_l:
+                # ... move car to maximal right lane of the desired lanes
+                for ln in l_desired_options:
+                    if ln == x_l:
                         break
-                    if (abs(l - x_l) == 1  # if lane is adjacent
-                            and x_rw.cells[l, x_c] == -1  # if lane is empty
+                    if (abs(ln - x_l) == 1  # if lane is adjacent
+                            and x_rw.cells[ln, x_c] == -1  # if lane is empty
                             and np.random.random() > .5  # randomize
                     ):
                         x_rw.free_cell(x_l, x_c)
-                        x_rw.cells[l, x_c] = car.id
-                        car.lane = l
-                        x_l = l
+                        x_rw.cells[ln, x_c] = car.id
+                        car.lane = ln
+                        x_l = ln
                         # return 0
+
+        # ======================
+        # classic movement ahead
 
         d = x_rw.get_cell_distance()
         v = car.velocity
@@ -249,53 +273,71 @@ class Simulator:
         d_max = np.where(x_rw.get_cells(x_l) != -1)[x_c + 1:]
         a_max = 1.25 + car.get_profile_parameter(0, 1)
 
+        # v for slowing down before junction or breaking
         v_special = car._junction_velocity if len(d_max) == 0 else 0
 
         d_remaining = x_rw.distance - (x_c + 1) * d
         if len(d_max) > 0:
             d_remaining = min(d_max, d_remaining)
-        d_safe_stop = ((v - v_special) / a_max) * (v / 2 + v_special / 2) + d  # distance to stop
-        breaking = d_remaining < d_safe_stop
+
+        breaking = False
+        if v > v_special:
+            d_safe_stop = ((v - v_special) / a_max) * (v / 2 + v_special / 2) + d  # distance to stop
+            breaking = d_remaining < d_safe_stop
 
         v_diff_half = a_max / self._step_time / 2
-        v_normal = min(
+        v_normal = max(0,min(
             car.velocity + v_diff_half * (1 + car.get_profile_parameter(l_bound=0)) ,
             x_rw.v_avg + x_rw.v_std * car.get_profile_parameter()
-        )
+        ))
         v_desired = v_special if breaking else v_normal
+
 
         a = (v_desired - v) / t
         a = max(-a_max, min(a, a_max))
 
+        v_old = float(v)
         v = max(0., v + a * t)
         car.velocity = v
 
         d_c = int((v * t) // d)  # desired distance to move
         if 0 <= d_c < 1 and v != 0:
             d_c = 1
+        if x_c + d_c >= x_rw.n_cell:
+            d_c = x_rw.n_cell - x_c - 1
 
         if x_rw.cells[x_l, x_c + d_c] != -1:
+            # @FIXME: this smells
             d_c -= 1
             d_c = max(0, d_c)
-            car.velocity -= d / t
+            car.velocity = max(0, d / t)
 
-        # wyprzedzanie
+        # ======================
+        # passing other cars
+
         x_l_old = x_l
         future_cell = car.cell + d_c
+        # if car is not at the end of the road ...
         if x_l != 0 and future_cell < x_rw.n_cell - 3:
             ahead_cell = future_cell + 1
             cells_ahead = x_rw.get_cells(car.lane)[car.cell + 1:ahead_cell + 3]
             car_ahead_id = np.where(cells_ahead != -1)[0]
+            # ... and there is a car ahead ...
             if len(car_ahead_id) != 0:
                 car_ahead_id = cells_ahead[car_ahead_id[0]]
                 car_ahead = self.cars[car_ahead_id]
                 v_other = car_ahead.velocity
+                # ... and it is slower than the current car ...
                 if v_other != 0 \
                         and v / v_other >= 1.5:
                     move_cells = x_rw.get_cells(x_l - 1)[future_cell - 2: future_cell]
+                    # ... and there is a free lane on the left, change lane and accelerate to pass
                     if all(move_cells == -1) and np.random.random() > .5:
                         x_l -= 1
                         car.velocity += 2
+
+        # ======================
+        # update car position
 
         x_rw.free_cell(x_l_old, x_c)
         x_rw.cells[x_l, x_c + d_c] = car.id
@@ -366,6 +408,10 @@ class Simulator:
         rw: Roadway = edge[2]['roadway']
         first_cells = rw.cells[:, 0]
         empty_lanes = np.where(first_cells == -1)[0]
+
+        if len(empty_lanes) == 0:
+            # @FIXME: there should be a queue for cars waiting for free lane
+            return
 
         lane = np.random.choice(empty_lanes)
         cell = 0
