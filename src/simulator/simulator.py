@@ -139,7 +139,7 @@ class Simulator:
         for id in ids_for_removal:
             self.cars.pop(id)
         for s in self.spawners.values():
-            if s.step(self._step_time):
+            if s.step(self._step_time) or not s.is_queue_empty():
                 self._spawn_car(s._junction)
 
 
@@ -423,6 +423,7 @@ class Simulator:
         return g
 
     def _spawn_car(self, junction_id: int):
+        spawner = self.spawners[junction_id]
         car_roadways_subgraph = self._get_roadways_for_cars_subgraph()
         edges_out = [e for e in car_roadways_subgraph.edges.data() if e[0] == junction_id]
         edges_out = np.array(edges_out)
@@ -433,8 +434,9 @@ class Simulator:
         empty_lanes = np.where(first_cells == -1)[0]
 
         if len(empty_lanes) == 0:
-            # @FIXME: there should be a queue for cars waiting for free lane
+            spawner.add_to_queue()
             return
+        spawner.get_from_queue()
 
         lane = np.random.choice(empty_lanes)
         cell = 0

@@ -1,5 +1,5 @@
 import numpy as np
-
+from queue import Queue
 
 class Spawner:
     def __init__(
@@ -12,6 +12,8 @@ class Spawner:
         self._junction: int = junction
         self._spawn_rate: float = spawn_rate
         self._spawn_rate_std: float = spawn_rate_std
+
+        self._queue: int = 0
 
         self._counter_max: int = 0
         self._counter: float = \
@@ -33,3 +35,16 @@ class Spawner:
             self._reset_counter()
             return True
         return False
+
+    def add_to_queue(self):
+        self._queue += 1
+
+    def is_queue_empty(self):
+        return self._queue == 0
+
+    def get_from_queue(self):
+        if self._queue > 0:
+            self._queue -= 1
+            return True
+        return False
+
