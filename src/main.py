@@ -7,6 +7,7 @@ def main():
 
     pl = Plotter(
         sim,
+        background_img="assets/background.png",
         plot_graph_on_start=False,
     )
     pl.run()

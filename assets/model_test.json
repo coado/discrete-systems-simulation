@@ -1,7 +1,6 @@
 {
   "width": 1000,
   "height": 800,
-  "background-src": "images/background.png",
   "junctions": [
     {
       "id": 0,

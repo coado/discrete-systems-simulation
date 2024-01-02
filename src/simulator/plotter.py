@@ -10,6 +10,7 @@ class Plotter:
     def __init__(
             self,
             simulator: Simulator,
+            background_img: str = None,
             plot_graph_on_start: bool = False,
             bg_opacity_on_start: float = .7,
             print_controls=True
@@ -26,6 +27,8 @@ class Plotter:
             self.rescale(self._simulator.w),
             self.rescale(self._simulator.h)
         ))
+
+        self._background_img = background_img
 
         self._d_x = 0
         self._d_y = 0
@@ -100,12 +103,19 @@ class Plotter:
 
         self._root.fill((50, 50, 50))
 
-        bg_img = pg.image.load('assets/tlo-symulacji.png')
-        bg_img = pg.transform.scale(bg_img, (
-            self.rescale(self._simulator.w),
-            self.rescale(self._simulator.h)
-        ))
-        self._surface.blit(bg_img, (0, 0))
+        if self._background_img is not None:
+            try:
+                bg_img = pg.image.load(self._background_img)
+                bg_img = pg.transform.scale(bg_img, (
+                    self.rescale(self._simulator.w),
+                    self.rescale(self._simulator.h)
+                ))
+                self._surface.blit(bg_img, (0, 0))
+            except Exception as e:
+                print("Error loading background image: " + str(e))
+                self._background_img = None
+        if self._background_img is None:
+            self._surface.fill(pg.Color('black'))
 
         s = pg.Surface((
             self.rescale(self._simulator.w),
