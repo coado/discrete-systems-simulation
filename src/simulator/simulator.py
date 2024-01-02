@@ -74,12 +74,33 @@ class Simulator:
 
         # lights
         for l in source["lights"]:
-            self.lights[l["junction"]] = Light(
+            state_map = {
+                True: Light.State.GREEN,
+                False: Light.State.RED
+            }
+            if "complementary_to" in l:
+                if l["complementary_to"] not in self.lights.keys():
+                    raise RuntimeError(f"Light {l['id']} is complementary to {l['complementary_to']}, "
+                                       f"but {l['complementary_to']} does not exist!")
+                other = self.lights[l["complementary_to"]]
+                negates = l["negates"]
+                duration_green = other.duration_red if l["negates"] else other.duration_green
+                duration_red = other.duration_green if l["negates"] else other.duration_red
+                state = state_map[ negates ^ (other.state == Light.State.GREEN) ]
+
+            else:
+                duration_green = l["duration_green"]
+                duration_red = l["duration_red"]
+                state = state_map[l["state"] == "green"]
+
+            self.lights[l["id"]] = Light(
                 l["id"],
-                l["duration"],
-                l["junction"],
-                Light.State.RED if l["state"] == "red" else Light.State.GREEN
+                l["roadway"],
+                duration_green,
+                duration_red,
+                state
             )
+            self.edges_map[l["roadway"]].traffic_light_at_end = l["id"]
 
         for s in source['spawners']:
             if len([e for e in self.graph.edges.data() if e[0] == s['junction']]) == 0:
@@ -155,17 +176,19 @@ class Simulator:
         if x_c == x_rw.cells.shape[1] - 1:
 
             # ============
-            # lights
-            lights = self.lights[closest_junction_id]
-            if lights.state == Light.State.RED:
-                car.velocity = 0
-                return 0
-
-            # ============
             # reaching destination
             if path[-1] == closest_junction_id:
                 self.edges_map[x_rw.id].free_cell(x_l, x_c)
                 return -1
+
+            # ============
+            # lights
+            potential_lights = x_rw.traffic_light_at_end
+            if potential_lights != -1:
+                lights = self.lights[potential_lights]
+                if lights.state == Light.State.RED:
+                    car.velocity = 0
+                    return 0
 
             # ============
             # changing road

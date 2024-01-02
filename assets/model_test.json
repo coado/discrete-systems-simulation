@@ -91,29 +91,31 @@
   "lights": [
     {
       "id": 0,
-      "junction": 0,
-      "duration": 20,
+      "roadway": 0,
+      "duration_green": 20,
+      "duration_red": 20,
       "state": "red"
     },
     {
       "id": 1,
-      "junction": 1,
-      "duration": 20,
-      "state":  "red"
-    },
-    {
-      "id": 2,
-      "junction": 2,
-      "duration": 20,
-      "state":  "red"
-    },
-    {
-      "id": 3,
-      "junction": 3,
-      "duration": 20,
-      "state":  "red"
+      "roadway": 2,
+      "complementary_to": 0,
+      "negates": true
     }
   ],
   "spawners": [
+    {
+      "junction": 0,
+      "spawn_rate": 0.5,
+      "spawn_rate_std": 0,
+      "random_delay_on_start": false
+    },
+
+    {
+      "junction": 2,
+      "spawn_rate": 0.2,
+      "spawn_rate_std": 0,
+      "random_delay_on_start": false
+    }
   ]
 }

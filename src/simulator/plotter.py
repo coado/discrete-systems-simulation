@@ -3,6 +3,7 @@ import pygame as pg
 import threading
 
 from src.simulator.simulator import Simulator
+from src.simulator.elements.roadway import Roadway
 
 
 class Plotter:
@@ -117,9 +118,9 @@ class Plotter:
         # plot all shit
 
         if self._plot_graph:
-            self.__blit_nodes()
+            self.__plot_nodes()
 
-        self.__blit_edges(
+        self.__plot_edges(
             plot_inactive_cells=self._plot_graph,
             # plot_lines=self._plot_graph,
             inactive_state=-1
@@ -154,9 +155,11 @@ class Plotter:
             )
         )
 
+
+
         pg.display.update()
 
-    def __blit_nodes(
+    def __plot_nodes(
             self,
     ):
         for id, node in self._simulator.graph.nodes.data():
@@ -179,7 +182,7 @@ class Plotter:
             #         font
             #     )
 
-    def __blit_edges(
+    def __plot_edges(
             self,
             plot_inactive_cells=False,
             plot_lines=False,
@@ -189,10 +192,12 @@ class Plotter:
         for source, target, data in self._simulator.graph.edges.data():
             source_pos = self._simulator.graph.nodes[source]
             target_pos = self._simulator.graph.nodes[target]
-            lights = self._simulator.lights[source]
-            rd = data['roadway']
+            rw: Roadway = data['roadway']
+            lights = self._simulator.lights[rw.traffic_light_at_end] \
+                if rw.traffic_light_at_end != -1 \
+                else None
 
-            lines = rd.lanes
+            lines = rw.lanes
 
             rot = np.arctan2(target_pos['y'] - source_pos['y'], target_pos['x'] - source_pos['x'])
 
@@ -222,6 +227,19 @@ class Plotter:
                     self.rescale(target_pos['y'] + d_y)
                 )
 
+                # make junctions paddings
+                reversed_x = int(start[0] > end[0]) * 2 - 1
+                reversed_y = int(start[1] > end[1]) * 2 - 1
+                d_j = self.rescale(10)
+                start = (
+                    start[0] + d_j * reversed_x * np.sin(rot + np.pi / 2),
+                    start[1] + d_j * reversed_y * np.cos(rot + np.pi / 2),
+                )
+                end = (
+                    end[0] + d_j * reversed_x * np.sin(rot + np.pi / 2),
+                    end[1] + d_j * reversed_y * np.cos(rot + np.pi / 2),
+                )
+
                 if plot_lines:
                     pg.draw.line(
                         self._surface,
@@ -231,16 +249,20 @@ class Plotter:
                         int(self.rescale(line_width))
                     )
 
-                line_length = len(rd.get_cells(line_index))
-                for i, cell in enumerate(rd.get_cells(line_index)):
+                if lights is not None:
+                    pg.draw.circle(
+                        self._surface,
+                        pg.color.Color('red') if lights.state == lights.state.RED else pg.color.Color('green'),
+                        (
+                            int(start[0] + (end[0] - start[0]) * (rw.n_cell + .5) / rw.n_cell + cell_r / 2),
+                            int(start[1] + (end[1] - start[1]) * (rw.n_cell + .5) / rw.n_cell + cell_r / 2)
+                        ),
+                        self.rescale(cell_r + 1),
+                    )
+
+                for i, cell in enumerate(rw.get_cells(line_index)):
                     r = cell_r / 3
                     color = pg.Color('black')
-
-                    if lights is not None and i == line_length - 1:
-                        if lights.state == lights.state.RED:
-                            color = pg.Color('red')
-                        elif lights.state == lights.state.GREEN:
-                            color = pg.Color('green')
 
                     if cell != inactive_state:
                         color = self._simulator.cars[cell]._color
@@ -250,8 +272,8 @@ class Plotter:
                             self._surface,
                             color,
                             (
-                                int(start[0] + (end[0] - start[0]) * (i + 1) / rd.n_cell + cell_r / 2),
-                                int(start[1] + (end[1] - start[1]) * (i + 1) / rd.n_cell + cell_r / 2)
+                                int(start[0] + (end[0] - start[0]) * (i + 1) / rw.n_cell + cell_r / 2),
+                                int(start[1] + (end[1] - start[1]) * (i + 1) / rw.n_cell + cell_r / 2)
                             ),
                             self.rescale(r),
                         )
