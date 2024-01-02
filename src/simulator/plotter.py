@@ -37,7 +37,7 @@ class Plotter:
         self._bg_opacity = max(0., min(bg_opacity_on_start, 1.))
 
         if print_controls:
-            self.print_controls()
+            print(self.get_controls_str())
 
     def run(self):
         self._thread = threading.Thread(target=self._run, args=[])
@@ -118,9 +118,9 @@ class Plotter:
         # plot all shit
 
         if self._plot_graph:
-            self.__plot_nodes()
+            self._plot_nodes()
 
-        self.__plot_edges(
+        self._plot_edges(
             plot_inactive_cells=self._plot_graph,
             # plot_lines=self._plot_graph,
             inactive_state=-1
@@ -155,11 +155,11 @@ class Plotter:
             )
         )
 
-
+        self._plot_controls()
 
         pg.display.update()
 
-    def __plot_nodes(
+    def _plot_nodes(
             self,
     ):
         for id, node in self._simulator.graph.nodes.data():
@@ -182,7 +182,7 @@ class Plotter:
             #         font
             #     )
 
-    def __plot_edges(
+    def _plot_edges(
             self,
             plot_inactive_cells=False,
             plot_lines=False,
@@ -278,20 +278,68 @@ class Plotter:
                             self.rescale(r),
                         )
 
-    def __blit_text(self, text, pos, font, color=pg.Color('black')):
-        span_id = font.render(text, False, color)
+    def _plot_controls(self):
+        header = "Controls:"
+        content = self.get_controls_str().split("\n")
+        pad = 10
+        h = pad \
+            + 24 + pad  \
+            + 24 * len(content) \
+            + pad
+        w = pad + max([len(s) for s in content]) * 7 + pad
+
+        surface = pg.Surface((w, h))
+        surface.fill(pg.Color('white'))
+        self.__blit_text(
+            header,
+            (pad, 10),
+            font_size=24,
+            surface=surface
+            )
+        for i, line in enumerate(content):
+            self.__blit_text(
+                line,
+                (pad, 24 * (i + 1) + pad*2),
+                font_size=16,
+                surface=surface
+                )
+        self._root.blit(surface, (0, 0))
+
+    def __blit_text(
+            self,
+            text,
+            pos,
+            font=None,
+            font_size=32,
+            color=pg.Color('black'),
+            surface=None,
+            center_x=False,
+            center_y=False
+    ):
+        if font is None:
+            font = pg.font.SysFont('Arial', font_size)
+        span_id = font.render(text, True, color)
         w, h = span_id.get_width(), span_id.get_height()
-        pos = (pos[0] - w // 2, pos[1] - h // 2)
-        self._surface.blit(span_id, pos)
+        pos_x, pos_y = pos
+        if center_x:
+            pos_x -= w // 2
+        if center_y:
+            pos_y -= h // 2
+        pos = (pos_x, pos_y)
+        if surface is None:
+            surface = self._root
+        surface.blit(span_id, pos)
 
     def quit(self) -> None:
         pg.quit()
 
-    def print_controls(self):
-        print("Plotter controls:")
-        print(" - quit: q/esc")
-        print(" - movement: arrows")
-        print(" - zoom: z/x")
-        print(" - default zoom and position: c")
-        print(" - hide/show graph: g")
-        print(" - background opacity: o/p")
+    def get_controls_str(self):
+        return "\n".join([
+            "Plotter controls:",
+            " - quit: q/esc",
+            " - movement: arrows",
+            " - zoom: z/x",
+            " - default zoom and position: c",
+            " - hide/show graph: g",
+            " - background opacity: o/p"
+        ])
