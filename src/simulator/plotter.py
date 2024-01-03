@@ -1,22 +1,30 @@
+from __future__ import annotations
+
 import numpy as np
 import pygame as pg
 import threading
+from enum import Enum
 
 from src.simulator.simulator import Simulator
 from src.simulator.elements.roadway import Roadway
 
 
 class Plotter:
+    class PlotGraphEnum(Enum):
+        NO = 0
+        YES = 1
+        YES_WITH_LABELS = 2
+
     def __init__(
             self,
             simulator: Simulator,
             background_img: str = None,
-            plot_graph_on_start: bool = False,
+            plot_graph_on_start: PlotGraphEnum = PlotGraphEnum.NO,
             bg_opacity_on_start: float = .7,
             print_controls=True
     ) -> None:
         self._simulator: simulator = simulator
-        self._thread: threading.Thread = None
+        self._thread: threading.Thread | None = None
 
         (width, height) = (1920, 1080)
         root = pg.display.set_mode((width, height))  # , pg.FULLSCREEN)
@@ -36,8 +44,10 @@ class Plotter:
         self._scale_max = 3
         self._scale_min = 0.9
 
-        self._plot_graph = plot_graph_on_start
+        self._plot_graph: Plotter.PlotGraphEnum = plot_graph_on_start
         self._bg_opacity = max(0., min(bg_opacity_on_start, 1.))
+
+        self._running = False
 
         if print_controls:
             print(self.get_controls_str())
@@ -54,8 +64,8 @@ class Plotter:
         pg.font.init()
         pg.font.SysFont('Arial', 32)
 
-        running = True
-        while running:
+        self._running = True
+        while self._running:
             for event in pg.event.get():
                 if (event.type == pg.QUIT
                         or (event.type == pg.KEYDOWN
@@ -63,9 +73,12 @@ class Plotter:
                                  or event.key == pg.K_q)
                         )
                 ):
-                    running = False
+                    self._running = False
+                    break
                 if event.type == pg.KEYDOWN and event.key == pg.K_g:
-                    self._plot_graph = not self._plot_graph
+                    self._plot_graph = Plotter.PlotGraphEnum((self._plot_graph.value + 1) % 3)
+            if not self._running:
+                break
             pressed_keys = pg.key.get_pressed()
             if pressed_keys[pg.K_UP]:
                 self._d_y += 10 * self._scale
@@ -127,12 +140,14 @@ class Plotter:
 
         # plot all shit
 
-        if self._plot_graph:
-            self._plot_nodes()
+        if self._plot_graph.value > Plotter.PlotGraphEnum.NO.value:
+            self._plot_nodes(
+                plot_indicators=self._plot_graph == Plotter.PlotGraphEnum.YES_WITH_LABELS
+            )
 
         self._plot_edges(
-            plot_inactive_cells=self._plot_graph,
-            # plot_lines=self._plot_graph,
+            plot_inactive_cells=self._plot_graph.value > Plotter.PlotGraphEnum.NO.value,
+            plot_indicators=self._plot_graph == Plotter.PlotGraphEnum.YES_WITH_LABELS,
             inactive_state=-1
         )
 
@@ -167,12 +182,16 @@ class Plotter:
 
         self._plot_controls()
 
+        self._plot_stats()
+
         pg.display.update()
 
     def _plot_nodes(
             self,
+            plot_indicators=False,
     ):
         for id, node in self._simulator.graph.nodes.data():
+            r_node = 12
             pg.draw.circle(
                 self._surface,
                 pg.Color('gray'),
@@ -180,22 +199,50 @@ class Plotter:
                     self.rescale(node['x']),
                     self.rescale(node['y'])
                 ),
-                self.rescale(10),
+                self.rescale(r_node),
             )
-            # if plot_indicator:
-            #     self._blit_text(
-            #         str(id),
-            #         (
-            #             node['x'],
-            #             node['y']
-            #         ),
-            #         font
-            #     )
+            border_width = 2
+            if id in self._simulator.spawners.keys():
+                additional_bw = border_width if id in self._simulator.terminal_junctions else 0
+                pg.draw.circle(
+                    self._surface,
+                    pg.Color('red'),
+                    (
+                        self.rescale(node['x']),
+                        self.rescale(node['y'])
+                    ),
+                    self.rescale(r_node+additional_bw),
+                    int(self.rescale(border_width + additional_bw)),
+                )
+            if id in self._simulator.terminal_junctions:
+                pg.draw.circle(
+                    self._surface,
+                    pg.Color('black'),
+                    (
+                        self.rescale(node['x']),
+                        self.rescale(node['y'])
+                    ),
+                    self.rescale(r_node),
+                    int(self.rescale(border_width)),
+                )
+            if plot_indicators:
+                self.__blit_text(
+                    str(id),
+                    (
+                        self.rescale(node['x']),
+                        self.rescale(node['y'])
+                    ),
+                    font_size=24,
+                    center_x=True,
+                    center_y=True,
+                    color=pg.Color('white'),
+                    surface=self._surface,
+                )
 
     def _plot_edges(
             self,
             plot_inactive_cells=False,
-            plot_lines=False,
+            plot_indicators=False,
             inactive_state=-1
     ):
 
@@ -213,8 +260,7 @@ class Plotter:
 
             line_padding = 6
             opposite_line_padding = line_padding * 2
-            line_width = 1
-            cell_r = 2
+            cell_r = 2.5
             for line_index in range(lines):
                 # if lane in oposite direction exists:
 
@@ -250,15 +296,6 @@ class Plotter:
                     end[1] + d_j * reversed_y * np.cos(rot + np.pi / 2),
                 )
 
-                if plot_lines:
-                    pg.draw.line(
-                        self._surface,
-                        (0, 0, 0),
-                        start,
-                        end,
-                        int(self.rescale(line_width))
-                    )
-
                 if lights is not None:
                     pg.draw.circle(
                         self._surface,
@@ -288,15 +325,31 @@ class Plotter:
                             self.rescale(r),
                         )
 
+            if plot_indicators:
+                x_avg = (source_pos['x'] + target_pos['x']) / 2
+                y_avg = (source_pos['y'] + target_pos['y']) / 2
+                self.__blit_text(
+                    str(rw.id),
+                    (
+                        self.rescale(x_avg),
+                        self.rescale(y_avg)
+                    ),
+                    font_size=24,
+                    center_x=True,
+                    center_y=True,
+                    color=pg.Color('black'),
+                    surface=self._surface,
+                )
+
     def _plot_controls(self):
         header = "Controls:"
         content = self.get_controls_str().split("\n")
         pad = 10
         h = pad \
-            + 24 + pad  \
+            + 24 + pad \
             + 24 * len(content) \
             + pad
-        w = pad + max([len(s) for s in content]) * 7 + pad
+        w = pad + max([len(s) for s in content]) * 7.5 + pad
 
         surface = pg.Surface((w, h))
         surface.fill(pg.Color('white'))
@@ -305,15 +358,50 @@ class Plotter:
             (pad, 10),
             font_size=24,
             surface=surface
-            )
+        )
         for i, line in enumerate(content):
             self.__blit_text(
                 line,
-                (pad, 24 * (i + 1) + pad*2),
+                (pad, 24 * (i + 1) + pad * 2),
                 font_size=16,
                 surface=surface
-                )
+            )
         self._root.blit(surface, (0, 0))
+
+    def _plot_stats(self):
+        header = "Stats:"
+        t_s = self._simulator.get_step_time()
+        t = self._simulator.get_time_elapsed()
+        content = [
+            f"Gap time: {self._simulator.get_t_gap()} [s]",
+            f"Step time: {t_s} [s]",
+            f"Step: {self._simulator.get_current_step()} / {self._simulator.get_max_steps()}",
+            f"Time elapsed: {t // 60} [min] {t % 60} [s] ({t} [s])",
+            f"Total cars: {len(self._simulator.cars)}",
+        ]
+        pad = 10
+        h = pad \
+            + 24 + pad \
+            + 24 * len(content) \
+            + pad
+        w = pad + max(max([len(s) for s in content]), 42) * 7.5 + pad
+
+        surface = pg.Surface((w, h))
+        surface.fill(pg.Color('white'))
+        self.__blit_text(
+            header,
+            (pad, 10),
+            font_size=24,
+            surface=surface
+        )
+        for i, line in enumerate(content):
+            self.__blit_text(
+                line,
+                (pad, 24 * (i + 1) + pad * 2),
+                font_size=16,
+                surface=surface
+            )
+        self._root.blit(surface, (self._root.get_width() - w, 0))
 
     def __blit_text(
             self,
@@ -340,8 +428,8 @@ class Plotter:
             surface = self._root
         surface.blit(span_id, pos)
 
-    def quit(self) -> None:
-        pg.quit()
+    def stop(self) -> None:
+        self._running = False
 
     def get_controls_str(self):
         return "\n".join([
@@ -349,7 +437,7 @@ class Plotter:
             " - quit: q/esc",
             " - movement: arrows",
             " - zoom: z/x",
-            " - default zoom and position: c",
-            " - hide/show graph: g",
-            " - background opacity: o/p"
+            " - reset zoom and position: c",
+            " - change graph visibility: g",
+            " - change background opacity: o/p"
         ])

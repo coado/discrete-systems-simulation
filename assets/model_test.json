@@ -24,7 +24,7 @@
       "id": 3,
       "x": 550,
       "y": 438,
-      "terminal": true
+      "terminal": false
     },
     {
       "id": 4,
@@ -539,21 +539,21 @@
 
     {
       "junction": 11,
-      "spawn_rate": 0.2,
+      "spawn_rate": 0.5,
       "spawn_rate_std": 0,
       "random_delay_on_start": false
     },
 
     {
       "junction": 15,
-      "spawn_rate": 0.2,
+      "spawn_rate": 0.5,
       "spawn_rate_std": 0,
       "random_delay_on_start": false
     },
 
     {
       "junction": 19,
-      "spawn_rate": 0.2,
+      "spawn_rate": 0.5,
       "spawn_rate_std": 0,
       "random_delay_on_start": false
     }

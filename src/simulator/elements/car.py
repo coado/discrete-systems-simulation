@@ -1,8 +1,7 @@
-from simulator.elements.tsf_objects.tsf_base_object import TsfBaseObject
 import numpy as np
 
 
-class TsfCar(TsfBaseObject):
+class Car:
     def __init__(
             self,
             id: int,
@@ -25,13 +24,9 @@ class TsfCar(TsfBaseObject):
         self._color = self._generate_color()
 
     def _generate_color(self):
-        bucket_size = 50
-        buckets = list(range(3))
-        np.random.shuffle(buckets)
         color = np.zeros(3)
         for i in range(3):
-            bucket = buckets.pop()
-            c = bucket * bucket_size + np.random.randint(bucket_size)
+            c = 50 + np.random.randint(150)
             color[i] = c
 
         return tuple(color)
@@ -51,3 +46,14 @@ class TsfCar(TsfBaseObject):
         if kmh:
             return self.velocity * 3.6
         return self.velocity
+
+    def __dict__(self):
+        return {
+            "id": self.id,
+            "rw": self.rw,
+            "lane": self.lane,
+            "cell": self.cell,
+            "profile": self.profile,
+            "velocity": self.velocity,
+            "target_junction": self.target_junction,
+        }
