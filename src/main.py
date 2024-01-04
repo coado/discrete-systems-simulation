@@ -28,7 +28,7 @@ def main():
         steps=100,
         # t_gap is the time between each step, in seconds.
         #   if t_gap is 0 (default), the simulation will run as fast as possible
-        t_gap=.2,
+        t_gap=.5,
     )
 
     # simple iteration is also possible...
@@ -59,7 +59,7 @@ def main():
 
     ## static dataframes (do not change over time)
     sim.get_junctions_dataframe()
-    sim.get_roadways_dataframe()
+    sim.get_roads_dataframe()
 
     ## dynamic dataframes (change with each simulation step)
     cars_df = sim.get_cars_dataframe()
@@ -92,7 +92,7 @@ def main():
     plt.ylabel("number of cars")
     plt.legend()
     # plt.show()
-    plt.savefig("results/cars.png")
+    # plt.savefig("results/cars.png")
 
 
 if __name__ == "__main__":

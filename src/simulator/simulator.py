@@ -115,6 +115,7 @@ class Simulator:
                 raise RuntimeError(f"Spawner {s['junction']} does not have any outgoing edges!")
             self.spawners[s['junction']] = Spawner(
                 s['junction'],
+                s['spawns_pedestrians'],
                 s['spawn_rate'],
                 s['spawn_rate_std'],
                 s['random_delay_on_start']
@@ -441,7 +442,7 @@ class Simulator:
         return g
 
     def _get_roads_for_pedestrians_subgraph(self):
-        g = nx.DiGraph()
+        g = nx.Graph()
         g.add_nodes_from(self.graph.nodes.data())
         e = [e for e in self.graph.edges.data() if e[2]['road'].is_type_for_pedestrians()]
         g.add_edges_from(e)
