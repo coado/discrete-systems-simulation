@@ -157,6 +157,24 @@
       "x": 575,
       "y": 460,
       "terminal": false
+    },
+    {
+      "id": 26,
+      "x": 395,
+      "y": 475,
+      "terminal": false
+    },
+    {
+      "id": 27,
+      "x": 406,
+      "y": 485,
+      "terminal": false
+    },
+    {
+      "id": 28,
+      "x": 400,
+      "y": 555,
+      "terminal": false
     }
   ],
   "roads": [
@@ -429,6 +447,24 @@
       "v_std": 1,
       "lanes": 1,
       "is_sidewalk": false
+    },
+    {
+      "id": 30,
+      "source": 28,
+      "target": 27,
+      "v_avg": 3.5,
+      "v_std": 0.5,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 30,
+      "source": 27,
+      "target": 26,
+      "v_avg": 3.5,
+      "v_std": 0.5,
+      "lanes": 3,
+      "is_sidewalk": true
     }
   ],
   "cars": [
@@ -541,49 +577,49 @@
   "spawners": [
     {
       "junction": 0,
-      "spawns_pedestrians": "car",
+      "spawns_pedestrians": false,
       "spawn_rate": 0.5,
       "spawn_rate_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 2,
-      "spawns_pedestrians": "car",
+      "spawns_pedestrians": false,
       "spawn_rate": 0.2,
       "spawn_rate_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 6,
-      "spawns_pedestrians": "car",
+      "spawns_pedestrians": false,
       "spawn_rate": 0.2,
       "spawn_rate_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 9,
-      "spawns_pedestrians": "car",
+      "spawns_pedestrians": false,
       "spawn_rate": 0.2,
       "spawn_rate_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 11,
-      "spawns_pedestrians": "car",
+      "spawns_pedestrians": false,
       "spawn_rate": 0.5,
       "spawn_rate_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 15,
-      "spawns_pedestrians": "car",
+      "spawns_pedestrians": false,
       "spawn_rate": 0.5,
       "spawn_rate_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 19,
-      "spawns_pedestrians": "car",
+      "spawns_pedestrians": false,
       "spawn_rate": 0.5,
       "spawn_rate_std": 0,
       "random_delay_on_start": false
