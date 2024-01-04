@@ -1,15 +1,23 @@
+from __future__ import annotations
+
 import numpy as np
 from queue import Queue
+
+from src.simulator.elements.pedestrian import Pedestrian
+from src.simulator.elements.car import Car
+
 
 class Spawner:
     def __init__(
             self,
             junction: int,
-            spawn_rate: float,  # [1/s]
-            spawn_rate_std: float,
+            spawns_pedestrians: bool = False,
+            spawn_rate: float = .5,  # [1/s]
+            spawn_rate_std: float = 0,
             random_delay_on_start: bool = True,
     ):
         self._junction: int = junction
+        self._spawns_pedestrians = spawns_pedestrians
         self._spawn_rate: float = spawn_rate
         self._spawn_rate_std: float = spawn_rate_std
 
@@ -48,3 +56,8 @@ class Spawner:
             return True
         return False
 
+    def is_for_pedesrians(self):
+        return self._spawns_pedestrians
+
+    def is_for_cars(self):
+        return not self._spawns_pedestrians

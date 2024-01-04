@@ -67,8 +67,6 @@ def main():
     # these dataframes can be used to analyze the simulation results.
     #   they store the state of the simulation at each step.
 
-    # cars_df.to_csv("results/cars.csv")
-
     # this information can be used to evaluate the performance of the simulated environment.
     #   e.g. the average number of cars stopped can be used to compare different traffic light configurations:
     cars_df_steps_grouped = cars_df.groupby("step")
