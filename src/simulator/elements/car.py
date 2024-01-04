@@ -12,7 +12,7 @@ class Car:
             velocity: float = 0
     ):
         self.id: int = id
-        self.rw: int = rw
+        self.rd: int = rw
         self.lane: int = lane
         self.cell: int = cell
         self.profile: float = np.random.random()
@@ -50,7 +50,7 @@ class Car:
     def __dict__(self):
         return {
             "id": self.id,
-            "rw": self.rw,
+            "rw": self.rd,
             "lane": self.lane,
             "cell": self.cell,
             "profile": self.profile,

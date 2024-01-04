@@ -6,7 +6,7 @@ import threading
 from enum import Enum
 
 from src.simulator.simulator import Simulator
-from src.simulator.elements.roadway import Roadway
+from src.simulator.elements.road import Road
 
 
 class Plotter:
@@ -21,6 +21,7 @@ class Plotter:
             background_img: str = None,
             plot_graph_on_start: PlotGraphEnum = PlotGraphEnum.NO,
             bg_opacity_on_start: float = .7,
+            scale_on_start: float = 1,
             print_controls=True
     ) -> None:
         self._simulator: simulator = simulator
@@ -40,9 +41,9 @@ class Plotter:
 
         self._d_x = 0
         self._d_y = 0
-        self._scale = 1
         self._scale_max = 3
         self._scale_min = 0.9
+        self._scale = min(max(scale_on_start, self._scale_min), self._scale_max)
 
         self._plot_graph: Plotter.PlotGraphEnum = plot_graph_on_start
         self._bg_opacity = max(0., min(bg_opacity_on_start, 1.))
@@ -249,12 +250,12 @@ class Plotter:
         for source, target, data in self._simulator.graph.edges.data():
             source_pos = self._simulator.graph.nodes[source]
             target_pos = self._simulator.graph.nodes[target]
-            rw: Roadway = data['roadway']
-            lights = self._simulator.lights[rw.traffic_light_at_end] \
-                if rw.traffic_light_at_end != -1 \
+            rd: Road = data['road']
+            lights = self._simulator.lights[rd.traffic_light_at_end] \
+                if rd.traffic_light_at_end != -1 \
                 else None
 
-            lines = rw.lanes
+            lines = rd.lanes
 
             rot = np.arctan2(target_pos['y'] - source_pos['y'], target_pos['x'] - source_pos['x'])
 
@@ -301,26 +302,30 @@ class Plotter:
                         self._surface,
                         pg.color.Color('red') if lights.state == lights.state.RED else pg.color.Color('green'),
                         (
-                            int(start[0] + (end[0] - start[0]) * (rw.n_cell + .5) / rw.n_cell + cell_r / 2),
-                            int(start[1] + (end[1] - start[1]) * (rw.n_cell + .5) / rw.n_cell + cell_r / 2)
+                            int(start[0] + (end[0] - start[0]) * (rd.n_cell + .5) / rd.n_cell + cell_r / 2),
+                            int(start[1] + (end[1] - start[1]) * (rd.n_cell + .5) / rd.n_cell + cell_r / 2)
                         ),
                         self.rescale(cell_r + 1),
                     )
 
-                for i, cell in enumerate(rw.get_cells(line_index)):
+                for i, cell in enumerate(rd.get_cells(line_index)):
                     r = cell_r / 3
                     color = pg.Color('black')
 
                     if cell != inactive_state:
-                        color = self._simulator.cars[cell]._color
-                        r = cell_r
+                        if rd.is_type_for_cars():
+                            color = self._simulator.cars[cell]._color
+                            r = cell_r
+                        elif rd.is_type_for_pedestrians():
+                            color = pg.Color('white')
+                            r = cell_r / 2
                     if cell != inactive_state or plot_inactive_cells:
                         pg.draw.circle(
                             self._surface,
                             color,
                             (
-                                int(start[0] + (end[0] - start[0]) * (i + 1) / rw.n_cell + cell_r / 2),
-                                int(start[1] + (end[1] - start[1]) * (i + 1) / rw.n_cell + cell_r / 2)
+                                int(start[0] + (end[0] - start[0]) * (i + 1) / rd.n_cell + cell_r / 2),
+                                int(start[1] + (end[1] - start[1]) * (i + 1) / rd.n_cell + cell_r / 2)
                             ),
                             self.rescale(r),
                         )
@@ -329,7 +334,7 @@ class Plotter:
                 x_avg = (source_pos['x'] + target_pos['x']) / 2
                 y_avg = (source_pos['y'] + target_pos['y']) / 2
                 self.__blit_text(
-                    str(rw.id),
+                    str(rd.id),
                     (
                         self.rescale(x_avg),
                         self.rescale(y_avg)

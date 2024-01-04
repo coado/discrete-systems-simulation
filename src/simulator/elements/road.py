@@ -3,8 +3,9 @@ from math import ceil
 from enum import Enum
 
 
-class Roadway:
-    d_cell_avg = 5  # [m]
+class Road:
+    d_cell_avg_cars = 5  # [m]
+    d_cell_avg_pedestrians = 2  # [m]
 
     class types(Enum):
         one_line = 1
@@ -17,20 +18,22 @@ class Roadway:
             self,
             id: int,
             distance: float,  # [m]
-            v_avg: float,  # [m/s]
-            v_std: float,  # [m/s]
-            r_type: types = types.one_line,
+            lanes: int = 1,
+            v_avg: float = 0,  # [m/s]
+            v_std: float = 0,  # [m/s]
+            is_pavement: bool = False,
             traffic_light_at_end: int = -1,
     ) -> None:
         self.id: int = id
         self.distance: float = distance  # [m]
-        self.lanes: int = r_type.value if r_type.value < 5 else 1
+        self.lanes: int = lanes
         self.v_avg: float = v_avg  # [m/s]
         self.v_std: float = v_std  # [m/s]
-        self.type: Roadway.types = r_type
+        self.is_pavement: bool = is_pavement
         self.traffic_light_at_end: int = traffic_light_at_end
 
-        n_cell = ceil(distance / Roadway.d_cell_avg)
+        d_cell_avg = Road.d_cell_avg_pedestrians if is_pavement else Road.d_cell_avg_cars
+        n_cell = ceil(distance / d_cell_avg)
         self.n_cell: int = n_cell
         self.d_cell: float = distance / n_cell
 
@@ -50,15 +53,10 @@ class Roadway:
         self.cells[lane, cell] = -1
 
     def is_type_for_cars(self):
-        return self.type in [
-            Roadway.types.one_line,
-            Roadway.types.two_line,
-            Roadway.types.three_line,
-            Roadway.types.four_line
-        ]
+        return not self.is_pavement
 
     def is_type_for_pedestrians(self):
-        return self.type is Roadway.types.pavement
+        return self.is_pavement
 
     def __dict__(self):
         return {
@@ -67,6 +65,6 @@ class Roadway:
             "lanes": self.lanes,
             "v_avg": self.v_avg,
             "v_std": self.v_std,
-            "type": self.type,
+            "is_pavement": self.is_pavement,
             "traffic_light_at_end": self.traffic_light_at_end,
         }
