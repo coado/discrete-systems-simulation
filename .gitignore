@@ -4,3 +4,5 @@
 docs/literature/*
 
 **/__pycache__/
+
+results/*

@@ -59,3 +59,14 @@ class Roadway:
 
     def is_type_for_pedestrians(self):
         return self.type is Roadway.types.pavement
+
+    def __dict__(self):
+        return {
+            "id": self.id,
+            "distance": self.distance,
+            "lanes": self.lanes,
+            "v_avg": self.v_avg,
+            "v_std": self.v_std,
+            "type": self.type,
+            "traffic_light_at_end": self.traffic_light_at_end,
+        }

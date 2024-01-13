@@ -2,9 +2,10 @@ import numpy as np
 import networkx as nx
 import json
 import threading
+import pandas as pd
 
 from src.simulator.elements.spawner import Spawner
-from src.simulator.elements.tsf_objects.tsf_car import TsfCar
+from simulator.elements.car import Car
 from src.simulator.elements.roadway import Roadway
 from src.simulator.elements.light import Light
 
@@ -14,15 +15,21 @@ class Simulator:
         self.graph: nx.DiGraph = nx.DiGraph()
         self.w = 0  # [m]
         self.h = 0  # [m]
-        self.cars: dict[int, TsfCar] = {}
+        self.cars: dict[int, Car] = {}
         self.edges_map: dict[int, Roadway] = {}
         self.spawners: dict[int, Spawner] = {}
         self.terminal_junctions: list[int] = []
-        self.lights: dict[int, Light] = {} # junction - light
+        self.lights: dict[int, Light] = {}  # junction - light
 
         self._step_time = 1  # [s]
 
         self._is_running = False
+        self._current_step = 0
+        self._max_steps = 0
+        self._t_gap = 0
+
+        self._cars_df = pd.DataFrame()
+        self._lights_df = pd.DataFrame()
 
         self.load(source_file_name)
 
@@ -62,7 +69,7 @@ class Simulator:
 
         for c in source["cars"]:
             car_id = c["id"]
-            self.cars[car_id] = TsfCar(
+            self.cars[car_id] = Car(
                 car_id,
                 c["roadway"],
                 c["lane"],
@@ -86,7 +93,7 @@ class Simulator:
                 negates = l["negates"]
                 duration_green = other.duration_red if l["negates"] else other.duration_green
                 duration_red = other.duration_green if l["negates"] else other.duration_red
-                state = state_map[ negates ^ (other.state == Light.State.GREEN) ]
+                state = state_map[negates ^ (other.state == Light.State.GREEN)]
 
             else:
                 duration_green = l["duration_green"]
@@ -115,9 +122,14 @@ class Simulator:
     def stop(self) -> None:
         self._is_running = False
 
-    def step(self, steps=1, t_gap=0) -> None:
+    def step(self, steps=1, t_gap=0):
+        # returns (time elapsed, avg cars stopped)
         self._is_running = True
+        self._max_steps += steps
+        self._t_gap = t_gap
+
         for i in range(steps):
+            self._current_step += 1
             if t_gap > 0:
                 lock = threading.Lock()
                 lock.acquire()
@@ -125,29 +137,39 @@ class Simulator:
                     threading.Timer(t_gap, lock.release).start()
                 while lock.locked():
                     if not self._is_running:
-                        return
+                        break
+            if not self._is_running:
+                break
             self._step()
+
         self._is_running = False
 
-    def _step(self) -> None:
-        ids_for_removal = []
+    def _step(self):
         self._step_lights()
+
+        time_spent_stopped = 0
+        cars_ids_for_removal = []
         for car in self.cars.values():
             indicator = self._step_car(car)
             if indicator == -1:
-                ids_for_removal.append(car.id)
-        for id in ids_for_removal:
+                cars_ids_for_removal.append(car.id)
+            if car.velocity == 0:
+                time_spent_stopped += 1
+        for id in cars_ids_for_removal:
             self.cars.pop(id)
+
         for s in self.spawners.values():
             if s.step(self._step_time) or not s.is_queue_empty():
                 self._spawn_car(s._junction)
 
+        self._update_cars_dataframe()
+        self._update_lights_dataframe()
 
     def _step_lights(self):
         for light in self.lights.values():
             light.step(self._step_time)
 
-    def _step_car(self, car: TsfCar) -> int:
+    def _step_car(self, car: Car) -> int:
         x_rw: Roadway = self.edges_map[car.rw]  # edge
         x_l = car.lane
         x_c = car.cell
@@ -196,7 +218,7 @@ class Simulator:
             next_road = car_roadways_subgraph.edges[path[0], path[1]]['roadway'].id
             next_road_cells = self.edges_map[next_road].cells
             next_road_first_cells = next_road_cells[:, 0]
-            empty_lanes = np.where(next_road_first_cells == -1)[0]
+            np.where(next_road_first_cells == -1)[0]
 
             n_lanes_in = x_rw.lanes
             n_lanes_out = len(next_road_first_cells)
@@ -222,7 +244,7 @@ class Simulator:
                 car.set_junction_velocity()
                 x_rw.free_cell(x_l, x_c)
                 x_rw = self.edges_map[next_road]
-                x_l = empty_lanes[next_lane]
+                x_l = next_lane
                 x_c = 0
                 x_rw.cells[x_l, x_c] = car.id
                 car.rw = next_road
@@ -238,7 +260,7 @@ class Simulator:
                 or d_remaining < 20 and np.random.random() > .33 \
                 or d_remaining < 10 \
                 or np.random.random() > .6:
-                # or car.get_profile_parameter() > .5 and np.random.random() > .5:
+            # or car.get_profile_parameter() > .5 and np.random.random() > .5:
 
             # choosing lanes that satisfy the conditions
             if len(path) > 1:
@@ -309,17 +331,16 @@ class Simulator:
             breaking = d_remaining < d_safe_stop
 
         v_diff_half = a_max / self._step_time / 2
-        v_normal = max(0,min(
-            car.velocity + v_diff_half * (1 + car.get_profile_parameter(l_bound=0)) ,
+        v_normal = max(0, min(
+            car.velocity + v_diff_half * (1 + car.get_profile_parameter(l_bound=0)),
             x_rw.v_avg + x_rw.v_std * car.get_profile_parameter()
         ))
         v_desired = v_special if breaking else v_normal
 
-
         a = (v_desired - v) / t
         a = max(-a_max, min(a, a_max))
 
-        v_old = float(v)
+        float(v)
         v = max(0., v + a * t)
         car.velocity = v
 
@@ -442,12 +463,27 @@ class Simulator:
         cell = 0
         car_id = max(self.cars.keys()) + 1 if len(self.cars) > 0 else 0
 
-        destinations = [ j for j in self.terminal_junctions if j != junction_id ]
+        destinations = [j for j in self.terminal_junctions if j != junction_id]
         if len(destinations) == 0:
             raise RuntimeError("No destinations for cars!")
         destination = np.random.choice(destinations)
 
-        self.cars[car_id] = TsfCar(
+        dest_ok = False
+        while not dest_ok:
+            try:
+                nx.astar_path(
+                    car_roadways_subgraph,
+                    edge[1],
+                    destination
+                )
+                dest_ok = True
+            except nx.NetworkXNoPath:
+                destinations = [j for j in self.terminal_junctions if j != destination]
+                if len(destinations) == 0:
+                    raise RuntimeError("No destinations for cars!")
+                destination = np.random.choice(destinations)
+
+        self.cars[car_id] = Car(
             car_id,
             rw.id,
             lane,
@@ -455,3 +491,67 @@ class Simulator:
             destination
         )
 
+    def get_step_time(self):
+        return self._step_time
+
+    def get_current_step(self):
+        return self._current_step
+
+    def get_max_steps(self):
+        return self._max_steps
+
+    def get_time_elapsed(self):
+        return self._current_step * self._step_time
+
+    def get_t_gap(self):
+        return self._t_gap
+
+    def _update_cars_dataframe(self):
+        cars = []
+        for car in self.cars.values():
+            d = car.__dict__()
+            d.update({
+                "step": self._current_step,
+                "closest_junction": [e[1] for e in self.graph.edges.data() if e[2]['roadway'].id == car.rw][0],
+            })
+            cars.append(d)
+        self._cars_df = pd.concat([self._cars_df, pd.DataFrame(cars)])
+
+    def _update_lights_dataframe(self):
+        lights = []
+        for light in self.lights.values():
+            d = light.__dict__()
+            d.update({
+                "step": self._current_step,
+            })
+            lights.append(d)
+        self._lights_df = pd.concat([self._lights_df, pd.DataFrame(lights)])
+
+    def get_junctions_dataframe(self) -> pd.DataFrame:
+        junctions = []
+        for junction in self.graph.nodes.data():
+            junctions.append({
+                "id": junction[0],
+                "x": junction[1]['x'],
+                "y": junction[1]['y'],
+            })
+        return pd.DataFrame(junctions)
+
+    def get_roadways_dataframe(self) -> pd.DataFrame:
+        edges = []
+        for edge in self.graph.edges.data():
+            d ={
+                "source": edge[0],
+                "target": edge[1],
+            }
+            d.update(
+                edge[2]['roadway'].__dict__()
+            )
+            edges.append(d)
+        return pd.DataFrame(edges)
+
+    def get_cars_dataframe(self) -> pd.DataFrame:
+        return self._cars_df
+
+    def get_lights_dataframe(self) -> pd.DataFrame:
+        return self._lights_df
