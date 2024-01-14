@@ -15,7 +15,7 @@ def main():
     pl = Plotter(
         sim,
         background_img="assets/background.png",
-        # plot_graph_on_start=Plotter.PlotGraphEnum.YES_WITH_LABELS,
+        plot_graph_on_start=Plotter.PlotGraphEnum.YES_WITH_LABELS, # NO, YES, YES_WITH_LABELS
         # scale_on_start=2.5,
     )
 

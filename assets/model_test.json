@@ -46,8 +46,8 @@
     },
     {
       "id": 7,
-      "x": 380,
-      "y": 450,
+      "x": 390,
+      "y": 445,
       "terminal": false
     },
     {
@@ -160,8 +160,8 @@
     },
     {
       "id": 26,
-      "x": 395,
-      "y": 475,
+      "x": 400,
+      "y": 470,
       "terminal": false
     },
     {
@@ -174,6 +174,48 @@
       "id": 28,
       "x": 400,
       "y": 555,
+      "terminal": false
+    },
+    {
+      "id": 29,
+      "x": 505,
+      "y": 425,
+      "terminal": false
+    },
+    {
+      "id": 30,
+      "x": 510,
+      "y": 445,
+      "terminal": false
+    },
+    {
+      "id": 31,
+      "x": 515,
+      "y": 465,
+      "terminal": false
+    },
+    {
+      "id": 32,
+      "x": 410,
+      "y": 500,
+      "terminal": false
+    },
+    {
+      "id": 32,
+      "x": 500,
+      "y": 410,
+      "terminal": false
+    },
+    {
+      "id": 33,
+      "x": 395,
+      "y": 465,
+      "terminal": false
+    },
+    {
+      "id": 34,
+      "x": 392,
+      "y": 457,
       "terminal": false
     }
   ],
@@ -208,7 +250,7 @@
     {
       "id": 3,
       "source": 1,
-      "target": 3,
+      "target": 27,
       "v_avg": 15,
       "v_std": 1,
       "lanes": 3,
@@ -458,39 +500,94 @@
       "is_sidewalk": true
     },
     {
-      "id": 30,
-      "source": 27,
-      "target": 26,
+      "id": 31,
+      "source": 26,
+      "target": 27,
       "v_avg": 3.5,
       "v_std": 0.5,
       "lanes": 3,
       "is_sidewalk": true
-    }
-  ],
-  "cars": [
-    {
-      "id": 0,
-      "road": 0,
-      "lane": 0,
-      "cell": 30,
-      "target_junction": 18,
-      "velocity": 15
     },
     {
-      "id": 1,
-      "road": 0,
-      "lane": 1,
-      "cell": 31,
-      "target_junction": 3,
-      "velocity": 25
+      "id": 32,
+      "source": 27,
+      "target": 30,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": false
     },
     {
-      "id": 2,
-      "road": 0,
-      "lane": 1,
-      "cell": 32,
-      "target_junction": 2,
-      "velocity": 15
+      "id": 33,
+      "source": 26,
+      "target": 33,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 34,
+      "source": 34,
+      "target": 33,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 35,
+      "source": 34,
+      "target": 7,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 36,
+      "source": 26,
+      "target": 29,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 37,
+      "source": 29,
+      "target": 30,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 38,
+      "source": 31,
+      "target": 30,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 39,
+      "source": 29,
+      "target": 32,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 40,
+      "source": 30,
+      "target": 3,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": false
     }
   ],
   "lights": [
@@ -572,6 +669,63 @@
       "road": 10,
       "complementary_to": 10,
       "negates": true
+    },
+    {
+      "id": 12,
+      "road": 32,
+      "duration_green": 20,
+      "duration_red": 20,
+      "state": "red"
+    },
+    {
+      "id": 13,
+      "road": 30,
+      "complementary_to": 12,
+      "negates": true
+    },
+    {
+      "id": 14,
+      "road": 31,
+      "complementary_to": 12,
+      "negates": true
+    },
+    {
+      "id": 15,
+      "road": 33,
+      "duration_green": 15,
+      "duration_red": 15,
+      "state": "red"
+    },
+    {
+      "id": 16,
+      "road": 34,
+      "complementary_to": 15,
+      "negates": false
+    },
+    {
+      "id": 17,
+      "road": 35,
+      "complementary_to": 3,
+      "negates": true
+    },
+    {
+      "id": 18,
+      "road": 38,
+      "complementary_to":12,
+      "negates": true
+    },
+    {
+      "id": 19,
+      "road": 37,
+      "complementary_to":18,
+      "negates": false
+    },
+    {
+      "id": 20,
+      "road": 39,
+      "duration_green": 18,
+      "duration_red": 18,
+      "state": "green"
     }
   ],
   "spawners": [
@@ -623,6 +777,32 @@
       "spawn_rate": 0.5,
       "spawn_rate_std": 0,
       "random_delay_on_start": false
+    }
+  ],
+  "cars": [
+    {
+      "id": 0,
+      "road": 0,
+      "lane": 0,
+      "cell": 30,
+      "target_junction": 18,
+      "velocity": 15
+    },
+    {
+      "id": 1,
+      "road": 0,
+      "lane": 1,
+      "cell": 31,
+      "target_junction": 3,
+      "velocity": 25
+    },
+    {
+      "id": 2,
+      "road": 0,
+      "lane": 1,
+      "cell": 32,
+      "target_junction": 2,
+      "velocity": 15
     }
   ]
 }
