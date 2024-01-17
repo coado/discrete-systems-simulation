@@ -116,8 +116,8 @@ class Simulator:
             self.spawners[s['junction']] = Spawner(
                 s['junction'],
                 s['spawns_pedestrians'],
-                s['spawn_rate'],
-                s['spawn_rate_std'],
+                s['spawn_freq'],
+                s['spawn_freq_std'],
                 s['random_delay_on_start']
             )
 
@@ -359,7 +359,7 @@ class Simulator:
             # @FIXME: this smells
             d_c -= 1
             d_c = max(0, d_c)
-            car.velocity = max(0, d / t)
+            car.velocity = max(0, d_c / t)
 
         # ======================
         # passing other cars

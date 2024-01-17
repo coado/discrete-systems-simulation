@@ -732,50 +732,50 @@
     {
       "junction": 0,
       "spawns_pedestrians": false,
-      "spawn_rate": 0.5,
-      "spawn_rate_std": 0,
+      "spawn_freq": 0.5,
+      "spawn_freq_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 2,
       "spawns_pedestrians": false,
-      "spawn_rate": 0.2,
-      "spawn_rate_std": 0,
+      "spawn_freq": 0.2,
+      "spawn_freq_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 6,
       "spawns_pedestrians": false,
-      "spawn_rate": 0.2,
-      "spawn_rate_std": 0,
+      "spawn_freq": 0.2,
+      "spawn_freq_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 9,
       "spawns_pedestrians": false,
-      "spawn_rate": 0.2,
-      "spawn_rate_std": 0,
+      "spawn_freq": 0.2,
+      "spawn_freq_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 11,
       "spawns_pedestrians": false,
-      "spawn_rate": 0.5,
-      "spawn_rate_std": 0,
+      "spawn_freq": 0.5,
+      "spawn_freq_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 15,
       "spawns_pedestrians": false,
-      "spawn_rate": 0.5,
-      "spawn_rate_std": 0,
+      "spawn_freq": 0.5,
+      "spawn_freq_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 19,
       "spawns_pedestrians": false,
-      "spawn_rate": 0.5,
-      "spawn_rate_std": 0,
+      "spawn_freq": 0.5,
+      "spawn_freq_std": 0,
       "random_delay_on_start": false
     }
   ],
@@ -784,7 +784,7 @@
       "id": 0,
       "road": 0,
       "lane": 0,
-      "cell": 30,
+      "cell": 65,
       "target_junction": 18,
       "velocity": 15
     },
@@ -792,7 +792,7 @@
       "id": 1,
       "road": 0,
       "lane": 1,
-      "cell": 31,
+      "cell": 63,
       "target_junction": 3,
       "velocity": 25
     },
@@ -800,9 +800,19 @@
       "id": 2,
       "road": 0,
       "lane": 1,
-      "cell": 32,
+      "cell": 65,
       "target_junction": 2,
       "velocity": 15
+    }
+  ],
+  "pedestrians": [
+    {
+      "id": 0,
+      "road": 36,
+      "lane": 1,
+      "cell": 20,
+      "target_junction": 28,
+      "velocity": 4
     }
   ]
 }

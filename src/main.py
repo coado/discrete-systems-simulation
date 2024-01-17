@@ -25,10 +25,10 @@ def main():
 
     sim.step(
         # steps is the number of steps to run the simulation
-        steps=100,
+        steps=500,
         # t_gap is the time between each step, in seconds.
         #   if t_gap is 0 (default), the simulation will run as fast as possible
-        t_gap=.5,
+        # t_gap=.5,
     )
 
     # simple iteration is also possible...
@@ -88,11 +88,12 @@ def main():
     # plotting the results
     plt.plot(cars_stopped_steps_grouped, label="cars stopped")
     plt.plot(cars_count_step_grouped, label="total cars")
+    plt.title("Number of total cars and cars stopped")
     plt.xlabel("steps")
     plt.ylabel("number of cars")
     plt.legend()
-    # plt.show()
-    # plt.savefig("results/cars.png")
+    plt.show()
+    plt.savefig("results/cars.png")
 
 
 if __name__ == "__main__":
