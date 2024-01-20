@@ -174,7 +174,7 @@
       "id": 28,
       "x": 400,
       "y": 555,
-      "terminal": false
+      "terminal": true
     },
     {
       "id": 29,
@@ -192,13 +192,13 @@
       "id": 31,
       "x": 515,
       "y": 465,
-      "terminal": false
+      "terminal": true
     },
     {
       "id": 32,
       "x": 410,
       "y": 500,
-      "terminal": false
+      "terminal": true
     },
     {
       "id": 32,
@@ -290,7 +290,7 @@
       "v_avg": 15,
       "v_std": 1,
       "lanes": 2,
-      "is_sidewalk": false
+      "is_sidewalk": true
     },
     {
       "id": 8,
@@ -777,6 +777,27 @@
       "spawn_freq": 0.5,
       "spawn_freq_std": 0,
       "random_delay_on_start": false
+    },
+    {
+      "junction": 28,
+      "spawns_pedestrians": true,
+      "spawn_freq": 0.2,
+      "spawn_freq_std": 0,
+      "random_delay_on_start": false
+    },
+    {
+      "junction": 31,
+      "spawns_pedestrians": true,
+      "spawn_freq": 0.2,
+      "spawn_freq_std": 0,
+      "random_delay_on_start": false
+    },
+    {
+      "junction": 32,
+      "spawns_pedestrians": true,
+      "spawn_freq": 0.2,
+      "spawn_freq_std": 0,
+      "random_delay_on_start": false
     }
   ],
   "cars": [
@@ -812,7 +833,26 @@
       "lane": 1,
       "cell": 20,
       "target_junction": 28,
-      "velocity": 4
+      "velocity": 4,
+      "t_walk_lights": 5
+    },
+    {
+      "id": 1,
+      "road": 36,
+      "lane": 1,
+      "cell": 21,
+      "target_junction": 28,
+      "velocity": 4,
+      "t_walk_lights": 5
+    },
+    {
+      "id": 2,
+      "road": 30,
+      "lane": 1,
+      "cell": 20,
+      "target_junction": 32,
+      "velocity": 4,
+      "t_walk_lights": 5
     }
   ]
 }

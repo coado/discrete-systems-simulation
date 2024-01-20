@@ -338,8 +338,8 @@ class Plotter:
                             color = self._simulator.cars[cell]._color
                             r = cell_r
                         elif rd.is_type_for_pedestrians():
-                            color = pg.Color('white')
-                            r = cell_r / 2
+                            color = self._simulator.pedestrians[cell]._color
+                            r = cell_r *2/3
                     if cell != inactive_state or plot_inactive_cells:
                         pg.draw.circle(
                             self._surface,
@@ -409,6 +409,7 @@ class Plotter:
             f"Step: {self._simulator.get_current_step()} / {self._simulator.get_max_steps()}",
             f"Time elapsed: {t // 60} [min] {t % 60} [s] ({t} [s])",
             f"Total cars: {len(self._simulator.cars)}",
+            f"Total pedestrians: {len(self._simulator.pedestrians)}",
             f"Mouse position: ({mouse_pos[0]:.0f}, {mouse_pos[1]:.0f}) [m]",
         ]
         pad = 10

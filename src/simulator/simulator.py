@@ -4,6 +4,7 @@ import json
 import threading
 import pandas as pd
 
+from simulator.elements.pedestrian import Pedestrian
 from src.simulator.elements.spawner import Spawner
 from simulator.elements.car import Car
 from src.simulator.elements.road import Road
@@ -16,6 +17,7 @@ class Simulator:
         self.w = 0  # [m]
         self.h = 0  # [m]
         self.cars: dict[int, Car] = {}
+        self.pedestrians: dict[int, Pedestrian] = {}
         self.edges_map: dict[int, Road] = {}
         self.spawners: dict[int, Spawner] = {}
         self.terminal_junctions: list[int] = []
@@ -70,6 +72,12 @@ class Simulator:
 
         for c in source["cars"]:
             car_id = c["id"]
+            if c["road"] not in self.edges_map.keys():
+                raise RuntimeError(f"Car {car_id} is on road {c['road']}, "
+                                   f"but {c['road']} does not exist!")
+            if self.edges_map[c["road"]].is_pavement:
+                raise RuntimeError(f"Car {car_id} is on road {c['road']}, "
+                                   f"but {c['road']} is a pavement!")
             self.cars[car_id] = Car(
                 car_id,
                 c["road"],
@@ -80,7 +88,25 @@ class Simulator:
             )
             self.edges_map[c["road"]].cells[c["lane"], c["cell"]] = car_id
 
-        # lights
+        for p in source["pedestrians"]:
+            ped_id = p["id"]
+            if p["road"] not in self.edges_map.keys():
+                raise RuntimeError(f"Pedestrian {ped_id} is on road {p['road']}, "
+                                   f"but {p['road']} does not exist!")
+            if not self.edges_map[p["road"]].is_pavement:
+                raise RuntimeError(f"Pedestrian {ped_id} is on road {p['road']}, "
+                                   f"but {p['road']} is not a pavement!")
+            self.pedestrians[ped_id] = Pedestrian(
+                ped_id,
+                p["road"],
+                p["lane"],
+                p["cell"],
+                p["target_junction"],
+                p["velocity"],
+                p["t_walk_lights"]
+            )
+            self.edges_map[p["road"]].cells[p["lane"], p["cell"]] = ped_id
+
         for l in source["lights"]:
             state_map = {
                 True: Light.State.GREEN,
@@ -111,7 +137,7 @@ class Simulator:
             self.edges_map[l["road"]].traffic_light_at_end = l["id"]
 
         for s in source['spawners']:
-            if len([e for e in self.graph.edges.data() if e[0] == s['junction']]) == 0:
+            if not s['spawns_pedestrians'] and len([e for e in self.graph.edges.data() if e[0] == s['junction']]) == 0:
                 raise RuntimeError(f"Spawner {s['junction']} does not have any outgoing edges!")
             self.spawners[s['junction']] = Spawner(
                 s['junction'],
@@ -149,23 +175,28 @@ class Simulator:
     def _step(self):
         self._step_lights()
 
-        time_spent_stopped = 0
         cars_ids_for_removal = []
         for car in self.cars.values():
             indicator = self._step_car(car)
             if indicator == -1:
                 cars_ids_for_removal.append(car.id)
-            if car.velocity == 0:
-                time_spent_stopped += 1
         for id in cars_ids_for_removal:
             self.cars.pop(id)
+
+        pedestrians_ids_for_removal = []
+        for ped in self.pedestrians.values():
+            indicator = self._step_pedestrian(ped)
+            if indicator == -1:
+                pedestrians_ids_for_removal.append(ped.id)
+        for id in pedestrians_ids_for_removal:
+            self.pedestrians.pop(id)
 
         for s in self.spawners.values():
             if s.step(self._step_time) or not s.is_queue_empty():
                 if not s.is_for_pedesrians():
                     self._spawn_car(s._junction)
                 else:
-                    pass
+                    self._spawn_pedestrian(s._junction)
 
         self._update_cars_dataframe()
         self._update_lights_dataframe()
@@ -186,6 +217,28 @@ class Simulator:
             if e[2]['road'].id == x_rd.id  # cannot use enumeration and compare i with id because of nx sorting edges
         ][0]
         target_junction_id = car.target_junction
+
+        if car.velocity == 0:
+            car.increment_jam_counter(self._step_time)
+            if car.get_jam_counter() > 60 * (3 + car.get_profile_parameter()):
+                car.reset_jam_counter()
+                destinations = self.terminal_junctions
+                dest_ok = False
+                destination = np.random.choice(destinations)
+                while not dest_ok:
+                    try:
+                        nx.astar_path(
+                            car_roads_subgraph,
+                            closest_junction_id,
+                            destination
+                        )
+                        dest_ok = True
+                    except nx.NetworkXNoPath:
+                        destinations = [j for j in destinations if j != destination]
+                        if len(destinations) == 0:
+                            raise RuntimeError("No destinations for cars!")
+                        destination = np.random.choice(destinations)
+                car.target_junction = destination
 
         try:
             path = nx.astar_path(
@@ -223,7 +276,6 @@ class Simulator:
             next_road = car_roads_subgraph.edges[path[0], path[1]]['road'].id
             next_road_cells = self.edges_map[next_road].cells
             next_road_first_cells = next_road_cells[:, 0]
-            np.where(next_road_first_cells == -1)[0]
 
             n_lanes_in = x_rd.lanes
             n_lanes_out = len(next_road_first_cells)
@@ -434,6 +486,141 @@ class Simulator:
         options = np.arange(n_lanes)[l_bound:u_bound]
         return options[::-1]  # reverse order
 
+    def _step_pedestrian(self, pedestrian):
+        x_rd: Road = self.edges_map[pedestrian.rd]
+        x_l = pedestrian.lane
+        x_c = pedestrian.cell
+
+        pedestrian_roads_subgraph = self._get_roads_for_pedestrians_subgraph()
+        pedestrian_roads_subdigraph = self._get_roads_for_pedestrians_subgraph(digraph=True)
+
+        die = [
+            e for e in pedestrian_roads_subdigraph.edges.data()
+            if e[2]['road'].id == x_rd.id
+        ][0]
+        e = [
+            e for e in pedestrian_roads_subgraph.edges.data()
+            if e[2]['road'].id == x_rd.id  # cannot use enumeration and compare i with id because of nx sorting edges
+        ][0]
+        closest_junction_id = e[1]
+        target_junction_id = pedestrian.target_junction
+
+        try:
+            path = nx.astar_path(
+                pedestrian_roads_subgraph,
+                closest_junction_id,
+                target_junction_id
+            )
+        except nx.NetworkXNoPath:
+            raise RuntimeError(f"Path between pedestrian {pedestrian.id} "
+                               f"current position ({closest_junction_id}) "
+                               f"and its destination ({target_junction_id}) does not exist!")
+
+        reversed_order = False
+        if len(path) > 1 and die[0] == path[1]:
+            closest_junction_id = path[1]
+            path = path[1:]
+            reversed_order = True
+        if len(path) > 1 and die[1] == path[1]:
+            closest_junction_id = path[1]
+            path = path[1:]
+        elif len(path) == 1:
+            if closest_junction_id == die[0]: # if our front is back of current edge
+                reversed_order = True
+        next_reversed_order = False
+        if len(path) > 1:
+            next_reversed_order = len( [
+                e for e in self.graph.edges.data() # we need to analyze digraph for direction
+                if e[0] == path[0] and e[1] == path[1]
+            ]) == 0
+
+        if not reversed_order and x_c == x_rd.cells.shape[1] - 1 or reversed_order and x_c == 0:
+            if path[-1] == closest_junction_id:
+                self.edges_map[x_rd.id].free_cell(x_l, x_c)
+                return -1
+
+            if x_rd.traffic_light_at_end != -1:
+                lights = self.lights[x_rd.traffic_light_at_end]
+                if lights.state == Light.State.RED:
+                    pedestrian.velocity = 0
+                    return 0
+                if lights.state == Light.State.GREEN:
+                    t_remaining = lights.get_remaining_time()
+                    if t_remaining < pedestrian.t_walk_lights:
+                        pedestrian.velocity = 0
+                        return 0
+
+            next_road = pedestrian_roads_subgraph.edges[path[0], path[1]]['road'].id
+            next_road_cells = self.edges_map[next_road].cells
+            next_road_first_cells = next_road_cells[:, 0] if not next_reversed_order else next_road_cells[:, -1]
+            is_next_free = next_road_first_cells[x_l] == -1
+            if is_next_free:
+                should_negate = next_reversed_order ^ reversed_order
+                l = x_l if not should_negate  else x_rd.lanes - x_l - 1
+                next_line = len(next_road_first_cells) * l // x_rd.lanes
+            else:
+                next_lines = np.where(next_road_first_cells == -1)[0]
+                if len(next_lines) == 0:
+                    pedestrian.velocity = 0
+                    return 0
+                next_line = np.random.choice(next_lines)
+
+            self.edges_map[x_rd.id].free_cell(x_l, x_c)
+            x_rd = self.edges_map[next_road]
+            x_l = next_line
+            x_c = 0 if not next_reversed_order else x_rd.n_cell - 1
+            x_rd.cells[x_l, x_c] = pedestrian.id
+            pedestrian.rd = next_road
+            pedestrian.lane = x_l
+            pedestrian.cell = x_c
+            return 0
+
+        if np.random.random() > .8:
+            pedestrian.velocity = 0
+            return 0
+
+        # make pedestrian use right side of the road
+        if np.random.random() > .5:
+            if not reversed_order:
+                right_lanes = list(range(x_rd.lanes // 2, x_rd.lanes))
+                if x_l not in right_lanes and np.random.random() > .5:
+                    x_rd.free_cell(x_l, x_c)
+                    x_l += 1
+                    pedestrian.lane = x_l
+                    x_rd.cells[x_l, x_c] = pedestrian.id
+                if x_l in right_lanes and x_l < x_rd.lanes -1 and np.random.random() > .75:
+                    x_rd.free_cell(x_l, x_c)
+                    x_l -= 1
+                    pedestrian.lane = x_l
+                    x_rd.cells[x_l, x_c] = pedestrian.id
+            else:
+                left_lanes = list(range(x_rd.lanes // 2))
+                if x_l not in left_lanes and np.random.random() > .5:
+                    x_rd.free_cell(x_l, x_c)
+                    x_l -= 1
+                    pedestrian.lane = x_l
+                    x_rd.cells[x_l, x_c] = pedestrian.id
+                if x_l in left_lanes and x_l > 0 and np.random.random() > .75:
+                    x_rd.free_cell(x_l, x_c)
+                    x_l += 1
+                    pedestrian.lane = x_l
+                    x_rd.cells[x_l, x_c] = pedestrian.id
+
+
+        # now move forward (backward if reversed_order)
+        cell_ahead = x_c + 1 if not reversed_order else x_c - 1
+        if x_rd.cells[x_l, cell_ahead] != -1:
+            pedestrian.velocity = 0
+            return 0
+
+        x_rd.free_cell(x_l, x_c)
+        next_cell = x_c + 1 if not reversed_order else x_c - 1
+        x_rd.cells[x_l, next_cell] = pedestrian.id
+        pedestrian.cell = next_cell
+        pedestrian.velocity = 1.1
+
+        return 0
+
     def _get_roads_for_cars_subgraph(self):
         g = nx.DiGraph()
         g.add_nodes_from(self.graph.nodes.data())
@@ -441,8 +628,8 @@ class Simulator:
         g.add_edges_from(e)
         return g
 
-    def _get_roads_for_pedestrians_subgraph(self):
-        g = nx.Graph()
+    def _get_roads_for_pedestrians_subgraph(self, digraph=False):
+        g = nx.Graph() if not digraph else nx.DiGraph()
         g.add_nodes_from(self.graph.nodes.data())
         e = [e for e in self.graph.edges.data() if e[2]['road'].is_type_for_pedestrians()]
         g.add_edges_from(e)
@@ -483,13 +670,62 @@ class Simulator:
                 )
                 dest_ok = True
             except nx.NetworkXNoPath:
-                destinations = [j for j in self.terminal_junctions if j != destination]
+                destinations = [j for j in destinations if j != destination]
                 if len(destinations) == 0:
                     raise RuntimeError("No destinations for cars!")
                 destination = np.random.choice(destinations)
 
         self.cars[car_id] = Car(
             car_id,
+            rd.id,
+            lane,
+            cell,
+            destination
+        )
+
+
+    def _spawn_pedestrian(self, junction_id: int):
+        spawner = self.spawners[junction_id]
+        pedestrians_roads_subgraph = self._get_roads_for_pedestrians_subgraph()
+        edges_out = [e for e in pedestrians_roads_subgraph.edges.data() if e[0] == junction_id or e[1] == junction_id]
+        edges_out = np.array(edges_out)
+        edges_out = edges_out[np.random.permutation(len(edges_out))]
+        edge = edges_out[0]
+        rd: Road = edge[2]['road']
+        first_cells = rd.cells[:, 0]
+        empty_lanes = np.where(first_cells == -1)[0]
+
+        if len(empty_lanes) == 0:
+            spawner.add_to_queue()
+            return
+        spawner.get_from_queue()
+
+        lane = np.random.choice(empty_lanes)
+        cell = 0
+        pedestrian_id = max(self.pedestrians.keys()) + 1 if len(self.pedestrians) > 0 else 0
+
+        destinations = [j for j in self.terminal_junctions if j != junction_id]
+        if len(destinations) == 0:
+            raise RuntimeError("No destinations for pedestrians!")
+        destination = np.random.choice(destinations)
+
+        dest_ok = False
+        while not dest_ok:
+            try:
+                nx.astar_path(
+                    pedestrians_roads_subgraph,
+                    edge[1],
+                    destination
+                )
+                dest_ok = True
+            except nx.NetworkXNoPath:
+                destinations = [j for j in destinations if j != destination]
+                if len(destinations) == 0:
+                    raise RuntimeError("No destinations for cars!")
+                destination = np.random.choice(destinations)
+
+        self.pedestrians[pedestrian_id] = Pedestrian(
+            pedestrian_id,
             rd.id,
             lane,
             cell,
@@ -545,7 +781,7 @@ class Simulator:
     def get_roads_dataframe(self) -> pd.DataFrame:
         edges = []
         for edge in self.graph.edges.data():
-            d ={
+            d = {
                 "source": edge[0],
                 "target": edge[1],
             }

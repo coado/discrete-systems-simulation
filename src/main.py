@@ -15,7 +15,8 @@ def main():
     pl = Plotter(
         sim,
         background_img="assets/background.png",
-        plot_graph_on_start=Plotter.PlotGraphEnum.YES_WITH_LABELS, # NO, YES, YES_WITH_LABELS
+        plot_graph_on_start=Plotter.PlotGraphEnum.NO, # NO, YES, YES_WITH_LABELS
+        # plot_graph_on_start=Plotter.PlotGraphEnum.YES_WITH_LABELS, # NO, YES, YES_WITH_LABELS
         # scale_on_start=2.5,
     )
 
@@ -25,10 +26,10 @@ def main():
 
     sim.step(
         # steps is the number of steps to run the simulation
-        steps=500,
+        steps=1000,
         # t_gap is the time between each step, in seconds.
         #   if t_gap is 0 (default), the simulation will run as fast as possible
-        # t_gap=.5,
+        t_gap=.2,
     )
 
     # simple iteration is also possible...
@@ -92,8 +93,8 @@ def main():
     plt.xlabel("steps")
     plt.ylabel("number of cars")
     plt.legend()
-    plt.show()
-    plt.savefig("results/cars.png")
+    # plt.show()
+    # plt.savefig("results/cars.png")
 
 
 if __name__ == "__main__":

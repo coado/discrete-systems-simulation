@@ -23,6 +23,8 @@ class Car:
 
         self._color = self._generate_color()
 
+        self.jam_counter = 0 # [s]
+
     def _generate_color(self):
         color = np.zeros(3)
         for i in range(3):
@@ -46,6 +48,15 @@ class Car:
         if kmh:
             return self.velocity * 3.6
         return self.velocity
+
+    def get_jam_counter(self):
+        return self.jam_counter
+
+    def increment_jam_counter(self, dt):
+        self.jam_counter += dt
+
+    def reset_jam_counter(self):
+        self.jam_counter = 0
 
     def __dict__(self):
         return {
