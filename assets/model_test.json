@@ -888,81 +888,85 @@
     {
       "id": 0,
       "road": 0,
-      "duration_green": 20,
-      "duration_red": 20,
+      "duration_green": 78,
+      "duration_red": 32,
       "state": "red"
     },
     {
       "id": 1,
       "road": 2,
-      "complementary_to": 0,
-      "negates": true
+      "duration_green": 13,
+      "duration_red": 38,
+      "state": "red"
     },
     {
       "id": 2,
       "road": 3,
-      "duration_green": 20,
-      "duration_red": 20,
+      "duration_green": 30,
+      "duration_red": 114,
       "state": "red"
     },
     {
       "id": 3,
       "road": 19,
-      "duration_green": 20,
-      "duration_red": 20,
+      "duration_green": 57,
+      "duration_red": 29,
       "state": "red"
     },
     {
       "id": 4,
       "road": 18,
-      "duration_green": 20,
-      "duration_red": 20,
+      "duration_green": 48,
+      "duration_red": 109,
       "state": "red"
     },
     {
       "id": 5,
       "road": 24,
-      "complementary_to": 4,
-      "negates": true
+      "duration_green": 50,
+      "duration_red": 60,
+      "state": "red"
     },
     {
       "id": 6,
       "road": 13,
-      "duration_green": 20,
-      "duration_red": 20,
+      "duration_green": 52,
+      "duration_red": 38,
       "state": "red"
     },
     {
       "id": 7,
       "road": 9,
       "complementary_to": 6,
-      "negates": false
+      "negates": true
     },
     {
       "id": 8,
       "road": 12,
-      "duration_green": 20,
-      "duration_red": 20,
+      "duration_green": 31,
+      "duration_red": 63,
       "state": "red"
     },
     {
       "id": 9,
-      "road": 29,
-      "complementary_to": 8,
-      "negates": true
+      "road": 28,
+      "duration_green": 28,
+      "duration_red": 52,
+      "state": "red"
     },
     {
       "id": 10,
       "road": 27,
-      "duration_green": 20,
-      "duration_red": 20,
+      "duration_green": 75,
+      "duration_red": 70,
       "state": "red"
     },
     {
       "id": 11,
       "road": 10,
-      "complementary_to": 10,
-      "negates": true
+      "duration_green": 39,
+      "duration_red": 107,
+      "state": "red"
     },
     {
       "id": 12,
@@ -1044,49 +1048,49 @@
     {
       "junction": 0,
       "spawns_pedestrians": false,
-      "spawn_freq": 0.5,
+      "spawn_freq": 0.17,
       "spawn_freq_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 2,
       "spawns_pedestrians": false,
-      "spawn_freq": 0.2,
+      "spawn_freq": 0.022,
       "spawn_freq_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 6,
       "spawns_pedestrians": false,
-      "spawn_freq": 0.2,
+      "spawn_freq": 0.001,
       "spawn_freq_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 9,
       "spawns_pedestrians": false,
-      "spawn_freq": 0.2,
+      "spawn_freq": 0.058,
       "spawn_freq_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 11,
       "spawns_pedestrians": false,
-      "spawn_freq": 0.5,
+      "spawn_freq": 0.54,
       "spawn_freq_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 15,
       "spawns_pedestrians": false,
-      "spawn_freq": 0.5,
+      "spawn_freq": 0.2,
       "spawn_freq_std": 0,
       "random_delay_on_start": false
     },
     {
       "junction": 19,
       "spawns_pedestrians": false,
-      "spawn_freq": 0.5,
+      "spawn_freq": 0.48,
       "spawn_freq_std": 0,
       "random_delay_on_start": false
     },
