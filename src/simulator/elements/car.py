@@ -12,7 +12,7 @@ class Car:
             velocity: float = 0
     ):
         self.id: int = id
-        self.rw: int = rw
+        self.rd: int = rw
         self.lane: int = lane
         self.cell: int = cell
         self.profile: float = np.random.random()
@@ -22,6 +22,8 @@ class Car:
         self._junction_velocity = 5 + self.get_profile_parameter()  # [m/s]
 
         self._color = self._generate_color()
+
+        self.jam_counter = 0 # [s]
 
     def _generate_color(self):
         color = np.zeros(3)
@@ -47,10 +49,19 @@ class Car:
             return self.velocity * 3.6
         return self.velocity
 
+    def get_jam_counter(self):
+        return self.jam_counter
+
+    def increment_jam_counter(self, dt):
+        self.jam_counter += dt
+
+    def reset_jam_counter(self):
+        self.jam_counter = 0
+
     def __dict__(self):
         return {
             "id": self.id,
-            "rw": self.rw,
+            "rw": self.rd,
             "lane": self.lane,
             "cell": self.cell,
             "profile": self.profile,

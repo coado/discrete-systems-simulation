@@ -15,7 +15,8 @@ def main():
     pl = Plotter(
         sim,
         background_img="assets/background.png",
-        # plot_graph_on_start=Plotter.PlotGraphEnum.YES_WITH_LABELS,
+        plot_graph_on_start=Plotter.PlotGraphEnum.NO, # NO, YES, YES_WITH_LABELS
+        # plot_graph_on_start=Plotter.PlotGraphEnum.YES_WITH_LABELS, # NO, YES, YES_WITH_LABELS
         # scale_on_start=2.5,
     )
 
@@ -25,7 +26,7 @@ def main():
 
     sim.step(
         # steps is the number of steps to run the simulation
-        steps=100,
+        steps=1000,
         # t_gap is the time between each step, in seconds.
         #   if t_gap is 0 (default), the simulation will run as fast as possible
         t_gap=.2,
@@ -59,15 +60,13 @@ def main():
 
     ## static dataframes (do not change over time)
     sim.get_junctions_dataframe()
-    sim.get_roadways_dataframe()
+    sim.get_roads_dataframe()
 
     ## dynamic dataframes (change with each simulation step)
     cars_df = sim.get_cars_dataframe()
     sim.get_lights_dataframe()
     # these dataframes can be used to analyze the simulation results.
     #   they store the state of the simulation at each step.
-
-    # cars_df.to_csv("results/cars.csv")
 
     # this information can be used to evaluate the performance of the simulated environment.
     #   e.g. the average number of cars stopped can be used to compare different traffic light configurations:
@@ -90,11 +89,12 @@ def main():
     # plotting the results
     plt.plot(cars_stopped_steps_grouped, label="cars stopped")
     plt.plot(cars_count_step_grouped, label="total cars")
+    plt.title("Number of total cars and cars stopped")
     plt.xlabel("steps")
     plt.ylabel("number of cars")
     plt.legend()
     # plt.show()
-    plt.savefig("results/cars.png")
+    # plt.savefig("results/cars.png")
 
 
 if __name__ == "__main__":

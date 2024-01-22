@@ -6,7 +6,7 @@ import threading
 from enum import Enum
 
 from src.simulator.simulator import Simulator
-from src.simulator.elements.roadway import Roadway
+from src.simulator.elements.road import Road
 
 
 class Plotter:
@@ -21,6 +21,7 @@ class Plotter:
             background_img: str = None,
             plot_graph_on_start: PlotGraphEnum = PlotGraphEnum.NO,
             bg_opacity_on_start: float = .7,
+            scale_on_start: float = 1,
             print_controls=True
     ) -> None:
         self._simulator: simulator = simulator
@@ -40,9 +41,9 @@ class Plotter:
 
         self._d_x = 0
         self._d_y = 0
-        self._scale = 1
         self._scale_max = 3
         self._scale_min = 0.9
+        self._scale = min(max(scale_on_start, self._scale_min), self._scale_max)
 
         self._plot_graph: Plotter.PlotGraphEnum = plot_graph_on_start
         self._bg_opacity = max(0., min(bg_opacity_on_start, 1.))
@@ -180,9 +181,15 @@ class Plotter:
             )
         )
 
+        x, y = pg.mouse.get_pos()
+        x -= init_pos_x+ self._d_x + d_x
+        y -= init_pos_y+ self._d_y + d_y
+        x = x / new_surface.get_width() * self._simulator.w
+        y = y / new_surface.get_height() * self._simulator.h
+
         self._plot_controls()
 
-        self._plot_stats()
+        self._plot_stats(mouse_pos=(x, y))
 
         pg.display.update()
 
@@ -191,7 +198,7 @@ class Plotter:
             plot_indicators=False,
     ):
         for id, node in self._simulator.graph.nodes.data():
-            r_node = 12
+            node_r = 6
             pg.draw.circle(
                 self._surface,
                 pg.Color('gray'),
@@ -199,7 +206,7 @@ class Plotter:
                     self.rescale(node['x']),
                     self.rescale(node['y'])
                 ),
-                self.rescale(r_node),
+                self.rescale(node_r),
             )
             border_width = 2
             if id in self._simulator.spawners.keys():
@@ -211,7 +218,7 @@ class Plotter:
                         self.rescale(node['x']),
                         self.rescale(node['y'])
                     ),
-                    self.rescale(r_node+additional_bw),
+                    self.rescale(node_r + additional_bw),
                     int(self.rescale(border_width + additional_bw)),
                 )
             if id in self._simulator.terminal_junctions:
@@ -222,7 +229,7 @@ class Plotter:
                         self.rescale(node['x']),
                         self.rescale(node['y'])
                     ),
-                    self.rescale(r_node),
+                    self.rescale(node_r),
                     int(self.rescale(border_width)),
                 )
             if plot_indicators:
@@ -232,7 +239,7 @@ class Plotter:
                         self.rescale(node['x']),
                         self.rescale(node['y'])
                     ),
-                    font_size=24,
+                    font_size=12,
                     center_x=True,
                     center_y=True,
                     color=pg.Color('white'),
@@ -247,99 +254,123 @@ class Plotter:
     ):
 
         for source, target, data in self._simulator.graph.edges.data():
-            source_pos = self._simulator.graph.nodes[source]
-            target_pos = self._simulator.graph.nodes[target]
-            rw: Roadway = data['roadway']
-            lights = self._simulator.lights[rw.traffic_light_at_end] \
-                if rw.traffic_light_at_end != -1 \
+            start_point = self._simulator.graph.nodes[source]
+            start_point = np.array([start_point['x'], start_point['y']])
+            end_point = self._simulator.graph.nodes[target]
+            end_point = np.array([end_point['x'], end_point['y']])
+
+            rd: Road = data['road']
+            lights = self._simulator.lights[rd.traffic_light_at_end] \
+                if rd.traffic_light_at_end != -1 \
                 else None
 
-            lines = rw.lanes
+            lines = rd.lanes
 
-            rot = np.arctan2(target_pos['y'] - source_pos['y'], target_pos['x'] - source_pos['x'])
+            is_pavement = rd.is_type_for_pedestrians()
+
+            deg = np.arctan2(
+                end_point[1] - start_point[1],
+                end_point[0] - start_point[0]
+            ) # radians
+            # deg = np.arctan2(
+            #     end_point['y'] - start_point['y'],
+            #     end_point['x'] - start_point['x']
+            # ) # radians
 
             line_padding = 6
             opposite_line_padding = line_padding * 2
             cell_r = 2.5
+            node_r = 6
             for line_index in range(lines):
                 # if lane in oposite direction exists:
 
-                shift_x, shift_y = 0, 0
+                d_left = (line_index - (lines - 1) / 2) * line_padding
+
                 if self._simulator.graph.has_edge(target, source):
-                    negative = 1
-                    if target > source:
-                        negative = -1
-                    shift_x = np.cos(rot + np.pi / 2) * opposite_line_padding // 2 * negative
-                    shift_y = np.sin(rot + np.pi / 2) * opposite_line_padding // 2 * negative
+                    d_left += opposite_line_padding // 2
 
-                d_x = np.cos(rot + np.pi / 2) * ((line_index - (lines - 1) / 2) * line_padding + shift_x)
-                d_y = np.sin(rot + np.pi / 2) * ((line_index - (lines - 1) / 2) * line_padding + shift_y)
+                d_start = self._calculate_line_shift(
+                    deg,
+                    -node_r / 2 if not is_pavement else 0,
+                    d_left
+                )
+                d_end = self._calculate_line_shift(
+                    deg,
+                    -node_r - cell_r * 2 if lights is not None else (
+                        -node_r if not is_pavement else 0
+                    ),
+                    d_left
+                )
                 start = (
-                    self.rescale(source_pos['x'] + d_x),
-                    self.rescale(source_pos['y'] + d_y)
+                    self.rescale(start_point[0] + d_start[0]),
+                    self.rescale(start_point[1] + d_start[1])
                 )
                 end = (
-                    self.rescale(target_pos['x'] + d_x),
-                    self.rescale(target_pos['y'] + d_y)
+                    self.rescale(end_point[0] + d_end[0]),
+                    self.rescale(end_point[1] + d_end[1])
                 )
 
-                # make junctions paddings
-                reversed_x = int(start[0] > end[0]) * 2 - 1
-                reversed_y = int(start[1] > end[1]) * 2 - 1
-                d_j = self.rescale(10)
-                start = (
-                    start[0] + d_j * reversed_x * np.sin(rot + np.pi / 2),
-                    start[1] + d_j * reversed_y * np.cos(rot + np.pi / 2),
-                )
-                end = (
-                    end[0] + d_j * reversed_x * np.sin(rot + np.pi / 2),
-                    end[1] + d_j * reversed_y * np.cos(rot + np.pi / 2),
-                )
-
-                if lights is not None:
+                if lights is not None and (line_index == 0 or not is_pavement):
+                    lights_r = cell_r + 1
+                    if is_pavement:
+                        lights_r -= .5
+                    d_end_lights = self._calculate_line_shift(
+                        deg,
+                        -node_r,
+                        d_left
+                    )
                     pg.draw.circle(
                         self._surface,
                         pg.color.Color('red') if lights.state == lights.state.RED else pg.color.Color('green'),
                         (
-                            int(start[0] + (end[0] - start[0]) * (rw.n_cell + .5) / rw.n_cell + cell_r / 2),
-                            int(start[1] + (end[1] - start[1]) * (rw.n_cell + .5) / rw.n_cell + cell_r / 2)
+                            self.rescale(end_point[0] + d_end_lights[0]),
+                            self.rescale(end_point[1] + d_end_lights[1])
                         ),
-                        self.rescale(cell_r + 1),
+                        self.rescale(lights_r),
                     )
 
-                for i, cell in enumerate(rw.get_cells(line_index)):
+                for i, cell in enumerate(rd.get_cells(line_index)):
                     r = cell_r / 3
                     color = pg.Color('black')
 
                     if cell != inactive_state:
-                        color = self._simulator.cars[cell]._color
-                        r = cell_r
+                        if rd.is_type_for_cars():
+                            color = self._simulator.cars[cell]._color
+                            r = cell_r
+                        elif rd.is_type_for_pedestrians():
+                            color = self._simulator.pedestrians[cell]._color
+                            r = cell_r *2/3
                     if cell != inactive_state or plot_inactive_cells:
                         pg.draw.circle(
                             self._surface,
                             color,
                             (
-                                int(start[0] + (end[0] - start[0]) * (i + 1) / rw.n_cell + cell_r / 2),
-                                int(start[1] + (end[1] - start[1]) * (i + 1) / rw.n_cell + cell_r / 2)
+                                int(start[0] + (end[0] - start[0]) * (i + 1) / rd.n_cell + cell_r / 2),
+                                int(start[1] + (end[1] - start[1]) * (i + 1) / rd.n_cell + cell_r / 2)
                             ),
                             self.rescale(r),
                         )
 
             if plot_indicators:
-                x_avg = (source_pos['x'] + target_pos['x']) / 2
-                y_avg = (source_pos['y'] + target_pos['y']) / 2
+                x_avg = (start_point[0] + end_point[0]) / 2
+                y_avg = (start_point[1] + end_point[1]) / 2
                 self.__blit_text(
-                    str(rw.id),
+                    str(rd.id),
                     (
                         self.rescale(x_avg),
                         self.rescale(y_avg)
                     ),
-                    font_size=24,
+                    font_size=12,
                     center_x=True,
                     center_y=True,
                     color=pg.Color('black'),
                     surface=self._surface,
                 )
+
+    def _calculate_line_shift(self, deg, d_up, d_left) -> np.array:
+        d_x = d_up * np.cos(deg) + d_left * np.cos(deg + np.pi / 2)
+        d_y = d_up * np.sin(deg) + d_left * np.sin(deg + np.pi / 2)
+        return np.array([d_x, d_y])
 
     def _plot_controls(self):
         header = "Controls:"
@@ -368,7 +399,7 @@ class Plotter:
             )
         self._root.blit(surface, (0, 0))
 
-    def _plot_stats(self):
+    def _plot_stats(self, mouse_pos: tuple[float, float]):
         header = "Stats:"
         t_s = self._simulator.get_step_time()
         t = self._simulator.get_time_elapsed()
@@ -378,6 +409,8 @@ class Plotter:
             f"Step: {self._simulator.get_current_step()} / {self._simulator.get_max_steps()}",
             f"Time elapsed: {t // 60} [min] {t % 60} [s] ({t} [s])",
             f"Total cars: {len(self._simulator.cars)}",
+            f"Total pedestrians: {len(self._simulator.pedestrians)}",
+            f"Mouse position: ({mouse_pos[0]:.0f}, {mouse_pos[1]:.0f}) [m]",
         ]
         pad = 10
         h = pad \
