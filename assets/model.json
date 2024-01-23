@@ -52,8 +52,8 @@
     },
     {
       "id": 8,
-      "x": 510,
-      "y": 360,
+      "x": 500,
+      "y": 306,
       "terminal": false
     },
     {
@@ -100,8 +100,8 @@
     },
     {
       "id": 16,
-      "x": 610,
-      "y": 325,
+      "x": 630,
+      "y": 321,
       "terminal": false
     },
     {
@@ -112,8 +112,8 @@
     },
     {
       "id": 18,
-      "x": 640,
-      "y": 380,
+      "x": 622,
+      "y": 395,
       "terminal": false
     },
     {
@@ -305,21 +305,20 @@
     },
     {
       "id": 49,
-      "x": 482,
-      "y": 379,
+      "x": 479,
+      "y": 371,
       "terminal": false
     },
-
     {
       "id": 50,
-      "x": 622,
+      "x": 588,
       "y": 290,
       "terminal": false
     },
     {
       "id": 51,
-      "x": 597,
-      "y": 302,
+      "x": 602,
+      "y": 275,
       "terminal": false
     },
     {
@@ -340,6 +339,90 @@
       "x": 433,
       "y": 224,
       "terminal": true
+    },
+    {
+      "id": 55,
+      "x": 527,
+      "y": 338,
+      "terminal": true
+    },
+
+    {
+      "id": 56,
+      "x": 511,
+      "y": 326,
+      "terminal": false
+    },
+    {
+      "id": 57,
+      "x": 496,
+      "y": 340,
+      "terminal": false
+    },
+
+    {
+      "id": 58,
+      "x": 609,
+      "y": 326,
+      "terminal": false
+    },
+    {
+      "id": 59,
+      "x": 486,
+      "y": 387,
+      "terminal": false
+    },
+
+    {
+      "id": 60,
+      "x": 410,
+      "y": 502,
+      "terminal": false
+    },
+
+    {
+      "id": 61,
+      "x": 907,
+      "y": 246,
+      "terminal": true
+    },
+    {
+      "id": 62,
+      "x": 876,
+      "y": 183,
+      "terminal": true
+    },
+
+    {
+      "id": 63,
+      "x": 585,
+      "y": 469,
+      "terminal": false
+    },
+    {
+      "id": 64,
+      "x": 621,
+      "y": 436,
+      "terminal": false
+    },
+    {
+      "id": 65,
+      "x": 650,
+      "y": 406,
+      "terminal": false
+    },
+    {
+      "id": 66,
+      "x": 674,
+      "y": 413,
+      "terminal": false
+    },
+
+    {
+      "id": 67,
+      "x": 661,
+      "y": 425,
+      "terminal": false
     }
   ],
   "roads": [
@@ -436,7 +519,7 @@
     {
       "id": 10,
       "source": 20,
-      "target": 18,
+      "target": 67,
       "v_avg": 15,
       "v_std": 1,
       "lanes": 3,
@@ -462,7 +545,7 @@
     },
     {
       "id": 13,
-      "source": 16,
+      "source": 58,
       "target": 14,
       "v_avg": 15,
       "v_std": 1,
@@ -516,7 +599,7 @@
     },
     {
       "id": 19,
-      "source": 8,
+      "source": 55,
       "target": 7,
       "v_avg": 15,
       "v_std": 1,
@@ -562,12 +645,13 @@
     {
       "id": 24,
       "source": 16,
-      "target": 8,
+      "target": 55,
       "v_avg": 15,
       "v_std": 1,
       "lanes": 3,
       "is_sidewalk": false
     },
+
     {
       "id": 25,
       "source": 8,
@@ -597,7 +681,7 @@
     },
     {
       "id": 28,
-      "source": 18,
+      "source": 67,
       "target": 24,
       "v_avg": 15,
       "v_std": 1,
@@ -607,7 +691,7 @@
     {
       "id": 29,
       "source": 24,
-      "target": 16,
+      "target": 58,
       "v_avg": 15,
       "v_std": 1,
       "lanes": 1,
@@ -616,7 +700,7 @@
     {
       "id": 30,
       "source": 28,
-      "target": 27,
+      "target": 60,
       "v_avg": 1.1,
       "v_std": 0.5,
       "lanes": 3,
@@ -715,7 +799,7 @@
     {
       "id": 41,
       "source": 35,
-      "target": 36,
+      "target": 66,
       "v_avg": 1.1,
       "v_std": 1,
       "lanes": 3,
@@ -832,7 +916,7 @@
     {
       "id": 54,
       "source": 49,
-      "target": 32,
+      "target": 59,
       "v_avg": 1.1,
       "v_std": 1,
       "lanes": 3,
@@ -841,15 +925,6 @@
     {
       "id": 55,
       "source": 39,
-      "target": 50,
-      "v_avg": 1.1,
-      "v_std": 1,
-      "lanes": 3,
-      "is_sidewalk": true
-    },
-    {
-      "id": 56,
-      "source": 50,
       "target": 51,
       "v_avg": 1.1,
       "v_std": 1,
@@ -857,9 +932,18 @@
       "is_sidewalk": true
     },
     {
-      "id": 57,
+      "id": 56,
       "source": 51,
-      "target": 52,
+      "target": 50,
+      "v_avg": 1.1,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 57,
+      "source": 52,
+      "target": 50,
       "v_avg": 1.1,
       "v_std": 1,
       "lanes": 3,
@@ -878,6 +962,126 @@
       "id": 59,
       "source": 53,
       "target": 54,
+      "v_avg": 1.1,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+
+    {
+      "id": 60,
+      "source": 52,
+      "target": 56,
+      "v_avg": 1.1,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 61,
+      "source": 56,
+      "target": 57,
+      "v_avg": 1.1,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 62,
+      "source": 47,
+      "target": 57,
+      "v_avg": 1.1,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 63,
+      "source": 32,
+      "target": 59,
+      "v_avg": 1.1,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 64,
+      "source": 60,
+      "target": 27,
+      "v_avg": 1.1,
+      "v_std": 0.5,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 65,
+      "source": 60,
+      "target": 31,
+      "v_avg": 1.1,
+      "v_std": 0.5,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+
+    {
+      "id": 65,
+      "source": 36,
+      "target": 61,
+      "v_avg": 1.1,
+      "v_std": 0.5,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 66,
+      "source": 39,
+      "target": 62,
+      "v_avg": 1.1,
+      "v_std": 0.5,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+
+    {
+      "id": 67,
+      "source": 43,
+      "target": 63,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 68,
+      "source": 64,
+      "target": 63,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 69,
+      "source": 64,
+      "target": 65,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 70,
+      "source": 66,
+      "target": 65,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": true
+    },
+    {
+      "id": 71,
+      "source": 66,
+      "target": 36,
       "v_avg": 1.1,
       "v_std": 1,
       "lanes": 3,
@@ -977,14 +1181,14 @@
     },
     {
       "id": 13,
-      "road": 30,
-      "complementary_to": 12,
+      "road": 64,
+      "complementary_to": 2,
       "negates": true
     },
     {
       "id": 14,
       "road": 31,
-      "complementary_to": 12,
+      "complementary_to": 2,
       "negates": true
     },
     {
@@ -1027,20 +1231,68 @@
     },
     {
       "id": 21,
-      "road": 52,
+      "road": 63,
       "complementary_to": 5,
       "negates": true
     },
     {
       "id": 22,
-      "road": 54,
+      "road": 52,
       "complementary_to": 5,
       "negates": true
     },
     {
       "id": 23,
-      "road": 56,
+      "road": 55,
       "complementary_to": 9,
+      "negates": true
+    },
+    {
+      "id": 24,
+      "road": 60,
+      "complementary_to": 4,
+      "negates": true
+    },
+    {
+      "id": 25,
+      "road": 62,
+      "complementary_to": 4,
+      "negates": true
+    },
+    {
+      "id": 26,
+      "road": 57,
+      "complementary_to": 9,
+      "negates": true
+    },
+    {
+      "id": 29,
+      "road": 69,
+      "complementary_to": 11,
+      "negates": true
+    },
+    {
+      "id": 30,
+      "road": 70,
+      "complementary_to": 11,
+      "negates": true
+    },
+    {
+      "id": 31,
+      "road": 25,
+      "complementary_to": 12,
+      "negates": true
+    },
+    {
+      "id": 27,
+      "road": 67,
+      "complementary_to": 31,
+      "negates": true
+    },
+    {
+      "id": 28,
+      "road": 68,
+      "complementary_to": 31,
       "negates": true
     }
   ],
@@ -1138,6 +1390,20 @@
     },
     {
       "junction": 48,
+      "spawns_pedestrians": true,
+      "spawn_freq": 0.2,
+      "spawn_freq_std": 0,
+      "random_delay_on_start": false
+    },
+    {
+      "junction": 61,
+      "spawns_pedestrians": true,
+      "spawn_freq": 0.2,
+      "spawn_freq_std": 0,
+      "random_delay_on_start": false
+    },
+    {
+      "junction": 62,
       "spawns_pedestrians": true,
       "spawn_freq": 0.2,
       "spawn_freq_std": 0,
