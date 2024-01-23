@@ -8,7 +8,7 @@ def main():
 
     # preparing simulation
 
-    sim = Simulator("assets/model_test.json")
+    sim = Simulator("assets/model.json")
 
     # visualizing simulation
 
@@ -93,8 +93,8 @@ def main():
     plt.xlabel("steps")
     plt.ylabel("number of cars")
     plt.legend()
-    # plt.show()
     # plt.savefig("results/cars.png")
+    # plt.show()
 
 
 if __name__ == "__main__":
