@@ -1,5 +1,5 @@
-numpy
-networkx
-pygame # + conda install -c conda-forge libstdcxx-ng
-pandas
-matplotlib
+numpy>=1.26.2
+networkx>=3.1
+pygame>=2.5.2
+pandas>=2.1.4
+matplotlib>=3.8.0

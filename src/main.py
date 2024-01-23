@@ -16,7 +16,6 @@ def main():
         sim,
         background_img="assets/background.png",
         plot_graph_on_start=Plotter.PlotGraphEnum.NO, # NO, YES, YES_WITH_LABELS
-        # plot_graph_on_start=Plotter.PlotGraphEnum.YES_WITH_LABELS, # NO, YES, YES_WITH_LABELS
         # scale_on_start=2.5,
     )
 
@@ -65,12 +64,13 @@ def main():
     ## dynamic dataframes (change with each simulation step)
     cars_df = sim.get_cars_dataframe()
     sim.get_lights_dataframe()
+    cars_df.to_csv('results/cars.csv')
     # these dataframes can be used to analyze the simulation results.
     #   they store the state of the simulation at each step.
 
     # this information can be used to evaluate the performance of the simulated environment.
     #   e.g. the average number of cars stopped can be used to compare different traffic light configurations:
-    cars_df_steps_grouped = cars_df.groupby("step")
+    cars_df_steps_grouped = cars_df.groupby("step") # 1 step == 1 s
     # count the number of cars stopped (cars that velocity is 0) at each step
     cars_stopped_steps_grouped = cars_df_steps_grouped["velocity"].apply(lambda x: (x == 0).sum())
     # count the number of cars in the simulation at each step
@@ -90,11 +90,11 @@ def main():
     plt.plot(cars_stopped_steps_grouped, label="cars stopped")
     plt.plot(cars_count_step_grouped, label="total cars")
     plt.title("Number of total cars and cars stopped")
-    plt.xlabel("steps")
+    plt.xlabel("time [s]")
     plt.ylabel("number of cars")
     plt.legend()
-    # plt.savefig("results/cars.png")
-    # plt.show()
+    plt.savefig("results/cars-stopped-chart.png")
+    plt.show()
 
 
 if __name__ == "__main__":

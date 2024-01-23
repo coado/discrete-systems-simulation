@@ -112,8 +112,8 @@
     },
     {
       "id": 18,
-      "x": 622,
-      "y": 395,
+      "x": 636,
+      "y": 387,
       "terminal": false
     },
     {
@@ -342,9 +342,9 @@
     },
     {
       "id": 55,
-      "x": 527,
-      "y": 338,
-      "terminal": true
+      "x": 510,
+      "y": 350,
+      "terminal": false
     },
 
     {
@@ -417,11 +417,16 @@
       "y": 413,
       "terminal": false
     },
-
     {
       "id": 67,
       "x": 661,
       "y": 425,
+      "terminal": false
+    },
+    {
+      "id": 68,
+      "x": 650,
+      "y": 357,
       "terminal": false
     }
   ],
@@ -528,7 +533,7 @@
     {
       "id": 11,
       "source": 18,
-      "target": 17,
+      "target": 68,
       "v_avg": 15,
       "v_std": 1,
       "lanes": 2,
@@ -644,18 +649,17 @@
     },
     {
       "id": 24,
-      "source": 16,
+      "source": 58,
       "target": 55,
       "v_avg": 15,
       "v_std": 1,
       "lanes": 3,
       "is_sidewalk": false
     },
-
     {
       "id": 25,
       "source": 8,
-      "target": 23,
+      "target": 55,
       "v_avg": 15,
       "v_std": 1,
       "lanes": 3,
@@ -682,7 +686,7 @@
     {
       "id": 28,
       "source": 67,
-      "target": 24,
+      "target": 65,
       "v_avg": 15,
       "v_std": 1,
       "lanes": 2,
@@ -1086,6 +1090,51 @@
       "v_std": 1,
       "lanes": 3,
       "is_sidewalk": true
+    },
+    {
+      "id": 72,
+      "source": 16,
+      "target": 58,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 3,
+      "is_sidewalk": false
+    },
+    {
+      "id": 73,
+      "source": 68,
+      "target": 17,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 2,
+      "is_sidewalk": false
+    },
+    {
+      "id": 74,
+      "source": 65,
+      "target": 18,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 2,
+      "is_sidewalk": false
+    },
+    {
+      "id": 75,
+      "source": 18,
+      "target": 24,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 2,
+      "is_sidewalk": false
+    },
+    {
+      "id": 76,
+      "source": 55,
+      "target": 23,
+      "v_avg": 15,
+      "v_std": 1,
+      "lanes": 2,
+      "is_sidewalk": false
     }
   ],
   "lights": [
@@ -1175,9 +1224,8 @@
     {
       "id": 12,
       "road": 32,
-      "duration_green": 20,
-      "duration_red": 20,
-      "state": "red"
+      "complementary_to": 10,
+      "negates": false
     },
     {
       "id": 13,
@@ -1279,7 +1327,7 @@
     },
     {
       "id": 31,
-      "road": 25,
+      "road": 26,
       "complementary_to": 12,
       "negates": true
     },
@@ -1293,6 +1341,18 @@
       "id": 28,
       "road": 68,
       "complementary_to": 31,
+      "negates": true
+    },
+    {
+      "id": 32,
+      "road": 4,
+      "complementary_to": 31,
+      "negates": false
+    },
+    {
+      "id": 33,
+      "road": 25,
+      "complementary_to": 5,
       "negates": true
     }
   ],
@@ -1349,64 +1409,64 @@
     {
       "junction": 28,
       "spawns_pedestrians": true,
-      "spawn_freq": 0.2,
-      "spawn_freq_std": 0,
+      "spawn_freq": 0.05,
+      "spawn_freq_std": 0.01,
       "random_delay_on_start": false
     },
     {
       "junction": 31,
       "spawns_pedestrians": true,
-      "spawn_freq": 0.2,
-      "spawn_freq_std": 0,
+      "spawn_freq": 0.05,
+      "spawn_freq_std": 0.01,
       "random_delay_on_start": false
     },
     {
       "junction": 32,
       "spawns_pedestrians": true,
-      "spawn_freq": 0.2,
-      "spawn_freq_std": 0,
+      "spawn_freq": 0.05,
+      "spawn_freq_std": 0.01,
       "random_delay_on_start": false
     },
     {
       "junction": 35,
       "spawns_pedestrians": true,
-      "spawn_freq": 0.2,
-      "spawn_freq_std": 0,
+      "spawn_freq": 0.02,
+      "spawn_freq_std": 0.01,
       "random_delay_on_start": false
     },
     {
       "junction": 41,
       "spawns_pedestrians": true,
-      "spawn_freq": 0.2,
-      "spawn_freq_std": 0,
+      "spawn_freq": 0.02,
+      "spawn_freq_std": 0.01,
       "random_delay_on_start": false
     },
     {
       "junction": 44,
       "spawns_pedestrians": true,
-      "spawn_freq": 0.2,
-      "spawn_freq_std": 0,
+      "spawn_freq": 0.005,
+      "spawn_freq_std": 0.001,
       "random_delay_on_start": false
     },
     {
       "junction": 48,
       "spawns_pedestrians": true,
-      "spawn_freq": 0.2,
-      "spawn_freq_std": 0,
+      "spawn_freq": 0.005,
+      "spawn_freq_std": 0.001,
       "random_delay_on_start": false
     },
     {
       "junction": 61,
       "spawns_pedestrians": true,
-      "spawn_freq": 0.2,
-      "spawn_freq_std": 0,
+      "spawn_freq": 0.04,
+      "spawn_freq_std": 0.01,
       "random_delay_on_start": false
     },
     {
       "junction": 62,
       "spawns_pedestrians": true,
-      "spawn_freq": 0.2,
-      "spawn_freq_std": 0,
+      "spawn_freq": 0.05,
+      "spawn_freq_std": 0.01,
       "random_delay_on_start": false
     }
   ],

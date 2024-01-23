@@ -163,9 +163,12 @@ class Simulator:
                 lock.acquire()
                 if t_gap > 0:
                     threading.Timer(t_gap, lock.release).start()
-                while lock.locked():
-                    if not self._is_running:
-                        break
+                try:
+                    while lock.locked():
+                        if not self._is_running:
+                            break
+                except KeyboardInterrupt:
+                    self._is_running = False
             if not self._is_running:
                 break
             self._step()
