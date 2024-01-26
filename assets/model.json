@@ -1416,7 +1416,7 @@
     {
       "junction": 31,
       "spawns_pedestrians": true,
-      "spawn_freq": 0.05,
+      "spawn_freq": 0.02,
       "spawn_freq_std": 0.01,
       "random_delay_on_start": false
     },

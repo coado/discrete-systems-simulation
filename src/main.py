@@ -2,6 +2,7 @@ from src.simulator.plotter import Plotter
 from src.simulator.simulator import Simulator
 
 import matplotlib.pyplot as plt
+from time import time, sleep
 
 
 def main():
@@ -21,15 +22,19 @@ def main():
 
     pl.run()
 
+    sleep(5)
+
     # running simulation
 
+    t_start = time()
     sim.step(
         # steps is the number of steps to run the simulation
         steps=1000,
         # t_gap is the time between each step, in seconds.
         #   if t_gap is 0 (default), the simulation will run as fast as possible
-        t_gap=.2,
+        t_gap=.05,
     )
+    t_end = time()
 
     # simple iteration is also possible...
     # for _ in range(10):
@@ -53,7 +58,9 @@ def main():
 
     print("-" * 50)
     print(f"Simulation stopped after: {s_made} step{'s' if s_made > 1 else ''}")
-    print(f"Time elapsed: {t_elapsed // 60} [min] {t_elapsed % 60} [s] ({t_elapsed} [s])")
+    print(f"Time elapsed (simulated): {t_elapsed // 60} [min] {t_elapsed % 60} [s] ({t_elapsed} [s])")
+    print(f"Time elapsed (real): {round(t_end - t_start, 2)} [s]")
+    print(f"Simulation t_gap (real): {round((t_end - t_start) / s_made, 2)} [s])")
 
     # using methods for more advanced analysis
 
@@ -87,11 +94,11 @@ def main():
     print(f"Average number of cars in the simulation: {round(cars_count_avg, 2)}")
 
     # plotting the results
-    plt.plot(cars_stopped_steps_grouped, label="cars stopped")
-    plt.plot(cars_count_step_grouped, label="total cars")
-    plt.title("Number of total cars and cars stopped")
-    plt.xlabel("time [s]")
-    plt.ylabel("number of cars")
+    plt.plot(cars_stopped_steps_grouped, label="Zatrzymane samochody")
+    plt.plot(cars_count_step_grouped, label="Wszystkie samochody")
+    plt.title("Porównanie liczby samochodów zatrzymanych\ni ogólnej liczby samochodów w symulacji")
+    plt.xlabel("Czas [s]")
+    plt.ylabel("Liczba samochodów")
     plt.legend()
     plt.savefig("results/cars-stopped-chart.png")
     plt.show()

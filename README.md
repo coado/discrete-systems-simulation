@@ -38,7 +38,7 @@ In our case, it is the Rondo Grunwaldzkie in Kraków, Poland (see the file [asse
 
 The _Plotter_ class is responsible for the visualisation of the simulation.
 
-![The GUI of the simulation.](./results/cars-stopped-simulator.png)
+![The GUI of the simulation.](./results/cars-stopped-simulator-0.png)
 
 ## Use case 
 
@@ -50,7 +50,7 @@ For example, we attempt to answer the question,
 what the causes of frequent traffic jams at this transport hub are.
 Thus, we can analyse how many cars are stopped at the roundabout.
 
-![The number of stopped cars at the roundabout.](./results/cars-stopped-chart.png)
+![The number of stopped cars at the roundabout.](./results/cars-stopped-chart-0.png)
 
 Example dataframe with the output of the simulation (for all the cars) 
 can be found in the file [results/cars-stopped.csv](./results/cars-stopped.csv).
